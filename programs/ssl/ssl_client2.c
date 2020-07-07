@@ -3407,20 +3407,38 @@ send_request:
 		mbedtls_printf( "  . Saving ticket...\n" );
 		fflush( stdout );
 
+        /* Determine the size of the received ticket */
+        ret = mbedtls_ssl_get_client_ticket( &ssl, NULL, NULL, &ticket_buffer_len );
+
+		if( ret < 0 )
+		{
+			mbedtls_printf( " failed\n  ! mbedtls_ssl_get_client_ticket returned -0x%x\n\n",
+                                       (unsigned) -ret );
+			goto exit;
+		}
+
+        if( ticket_buffer_len > MAX_TICKET_BUFFER )
+        {
+			mbedtls_printf( " failed\n  ! Not enough buffer to store ticket\n\n");
+			goto exit;
+        }
+
+        if( ticket_buffer_len == 0 ) 
+        {
+			// no ticket is available
+			opt.reconnect = 0;
+			mbedtls_printf( " failed\n  ! No ticket available\n\n" );
+            goto close_notify; 
+		}
+
+        /* Store ticket in buffer */
 		ret = mbedtls_ssl_get_client_ticket( &ssl, &ticket, ticket_buffer, &ticket_buffer_len );
 
 		if( ret < 0 )
 		{
-			mbedtls_printf( " failed\n  ! mbedtls_ssl_get_ticket returned -0x%x\n\n",
+			mbedtls_printf( " failed\n  ! mbedtls_ssl_get_client_ticket returned -0x%x\n\n",
                                        (unsigned) -ret );
 			goto exit;
-		}
-		else if( ret == 1 ) 
-        {
-			// no ticket available - we cannot re-connect
-			opt.reconnect = 0;
-			mbedtls_printf( "no ticket available\n" );
-
 		}
 		else if( ret == 0 ) 
         {
