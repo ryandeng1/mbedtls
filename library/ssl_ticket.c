@@ -197,7 +197,7 @@ int mbedtls_ssl_ticket_setup( mbedtls_ssl_ticket_context *ctx,
     return( 0 );
 }
 
-#if defined(MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL)
+#if !defined(MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL)
 
 /*
  * Serialize a session in the following format:
@@ -307,7 +307,7 @@ static int ssl_load_session(mbedtls_ssl_ticket* session,
     return(0);
 }
 
-#endif /* MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL */
+#endif /* !MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL */
 /*
  * Create session ticket, with the following structure:
  *
@@ -321,6 +321,9 @@ static int ssl_load_session(mbedtls_ssl_ticket* session,
  * The key_name, iv, and length of encrypted_state are the additional
  * authenticated data.
  */
+#define UNUSED(x) (void)(x)
+
+
 #if defined(MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL)
 int mbedtls_ssl_ticket_write(void* p_ticket,
     const mbedtls_ssl_ticket* session,
@@ -348,6 +351,7 @@ int mbedtls_ssl_ticket_write( void *p_ticket,
     unsigned char *tag;
     size_t clear_len, ciph_len;
 
+   UNUSED(session);
     *tlen = 0;
 
     if( ctx == NULL || ctx->f_rng == NULL )
@@ -373,20 +377,14 @@ int mbedtls_ssl_ticket_write( void *p_ticket,
     *flags = ctx->flags;
 #endif /* MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL */
 
-
     memcpy( key_name, key->name, TICKET_KEY_NAME_BYTES );
 
     if( ( ret = ctx->f_rng( ctx->p_rng, iv, TICKET_IV_BYTES ) ) != 0 )
         goto cleanup;
 
 #if defined(MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL)
-    if ((ret = ssl_save_session(session,
-        state, end - state, &clear_len)) != 0 ||
-        (unsigned long)clear_len > 65535)
-    {
-        goto cleanup;
-    }
-#else
+    clear_len=0;
+#else 
     /* Dump session state */
     if( ( ret = mbedtls_ssl_session_save( session,
                                           state, end - state,
@@ -523,10 +521,8 @@ int mbedtls_ssl_ticket_parse( void *p_ticket,
         ret = MBEDTLS_ERR_SSL_INTERNAL_ERROR;
         goto cleanup;
     }
-#if defined(MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL)
-    if ((ret = ssl_load_session(session, ticket, clear_len)) != 0)
-        goto cleanup;
-#else
+
+#if !defined(MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL)
     /* Actually load session */
     if( ( ret = mbedtls_ssl_session_load( session, ticket, clear_len ) ) != 0 )
         goto cleanup;

@@ -1635,14 +1635,6 @@ static int ssl_write_new_session_ticket( mbedtls_ssl_context *ssl )
     ticket.key_len = hash_length;
     ticket.ciphersuite = ssl->transform_negotiate->ciphersuite_info->id;
 
-#if defined(MBEDTLS_X509_CRT_PARSE_C)
-    /* Check whether the client provided a certificate during the exchange */
-    if( ssl->session->peer_cert != NULL )
-        ticket.peer_cert = ssl->session->peer_cert;
-    else
-        ticket.peer_cert = NULL;
-#endif /* MBEDTLS_X509_CRT_PARSE_C */
-
     /*
      *  HKDF-Expand-Label( resumption_master_secret,
      *                    "resumption", ticket_nonce, Hash.length )

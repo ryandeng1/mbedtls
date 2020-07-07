@@ -160,6 +160,7 @@ int main( void )
 #define DFL_KEY_EXCHANGE_MODES MBEDTLS_SSL_TLS13_KEY_EXCHANGE_MODE_ALL
 #define DFL_EARLY_DATA      MBEDTLS_SSL_EARLY_DATA_DISABLED
 #define MAX_NAMED_GROUPS        4
+#define MAX_TICKET_BUFFER     1024
 #endif /* MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL */
 
 #define GET_REQUEST "GET %s HTTP/1.0\r\nExtra-header: "
@@ -1272,7 +1273,9 @@ int main( int argc, char *argv[] )
 #endif /* MBEDTLS_ZERO_RTT */
 
 #if defined(MBEDTLS_SSL_NEW_SESSION_TICKET)
-	mbedtls_ssl_ticket ticket;
+	unsigned char ticket_buffer[MAX_TICKET_BUFFER];
+    size_t ticket_buffer_len; 
+    mbedtls_ssl_ticket ticket;
 #endif /* MBEDTLS_SSL_NEW_SESSION_TICKET */
 
 #else 
@@ -1332,9 +1335,6 @@ int main( int argc, char *argv[] )
     mbedtls_ssl_config_init( &conf );
 #if defined(MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL) 
 
-#if defined(MBEDTLS_SSL_NEW_SESSION_TICKET)
-	mbedtls_ssl_init_client_ticket(&ticket);
-#endif /* MBEDTLS_SSL_NEW_SESSION_TICKET */
 
 #if defined(MBEDTLS_ECP_C)
 	memset((void *)named_groups_list, MBEDTLS_ECP_DP_NONE, sizeof(named_groups_list));
@@ -3407,7 +3407,7 @@ send_request:
 		mbedtls_printf( "  . Saving ticket...\n" );
 		fflush( stdout );
 
-		ret = mbedtls_ssl_get_client_ticket( &ssl, &ticket );
+		ret = mbedtls_ssl_get_client_ticket( &ssl, &ticket, ticket_buffer, &ticket_buffer_len );
 
 		if( ret < 0 )
 		{
@@ -3751,7 +3751,7 @@ reconnect:
 		 * At a minimum we need to configure the psk (with the resumption_secret)
 		 * and the psk_identity (with the ticket).
 		 */
-		if(( ret = mbedtls_ssl_conf_client_ticket( &ssl, &ticket )) != 0 )
+		if(( ret = mbedtls_ssl_conf_client_set_ticket( &ssl, &ticket, ticket_buffer, ticket_buffer_len, MBEDTLS_SSL_TLS13_KEY_EXCHANGE_MODE_PSK_KE )) != 0 )
 		{
 			mbedtls_printf(" failed\n  ! mbedtls_ssl_conf_client_ticket returned %d\n\n", ret);
 			goto exit;
@@ -3841,9 +3841,7 @@ exit:
 #endif
 #endif
 
-#if defined(MBEDTLS_SSL_NEW_SESSION_TICKET)
-    mbedtls_ssl_del_client_ticket(&ticket);
-#else 
+#if !defined(MBEDTLS_SSL_NEW_SESSION_TICKET)
     mbedtls_ssl_session_free( &saved_session );
 #endif /* MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL */
     mbedtls_ssl_free( &ssl );

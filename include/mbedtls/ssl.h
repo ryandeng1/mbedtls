@@ -810,9 +810,8 @@ typedef enum
 /**
 * \brief  Ticket Structure
 */
+#if defined(MBEDTLS_SSL_NEW_SESSION_TICKET)
 struct mbedtls_ssl_ticket {
-    unsigned char* ticket; // The ticket itself is the psk_identity
-    size_t ticket_len; // PSK identity length
     int ciphersuite;
     uint32_t ticket_lifetime;
     uint32_t ticket_age_add;
@@ -825,11 +824,9 @@ struct mbedtls_ssl_ticket {
 #if defined(MBEDTLS_HAVE_TIME)
     time_t start;
 #endif
-#if defined(MBEDTLS_X509_CRT_PARSE_C)
-    mbedtls_x509_crt* peer_cert;    /*!< entry peer_cert */
-#endif
     mbedtls_ssl_ticket_flags flags; /*!< ticket flags    */
 };
+#endif /* MBEDTLS_SSL_NEW_SESSION_TICKET */
 
 #if defined(MBEDTLS_SSL_ASYNC_PRIVATE)
 #if defined(MBEDTLS_X509_CRT_PARSE_C)
