@@ -4460,7 +4460,7 @@ int mbedtls_ssl_conf_ticket_meta( mbedtls_ssl_config *conf,
 #if defined(MBEDTLS_SSL_NEW_SESSION_TICKET)
 
 int mbedtls_ssl_conf_client_set_ticket( const mbedtls_ssl_context *ssl,
-                                    mbedtls_ssl_ticket *ticket, unsigned char *buf, uint16_t size, const int key_exchange_mode )
+                                    mbedtls_ssl_ticket *ticket, unsigned char *buf, size_t size, const int key_exchange_mode )
 {
     int ret;
     mbedtls_ssl_config *conf  = ( mbedtls_ssl_config * ) ssl->conf;
@@ -4507,6 +4507,9 @@ int mbedtls_ssl_conf_client_set_ticket( const mbedtls_ssl_context *ssl,
         return( ret );
     }
     
+    /* This is a resumption-based PSK */
+    conf->resumption_mode = 1; 
+
     return( 0 );
 }
 
@@ -4557,25 +4560,6 @@ int mbedtls_ssl_get_client_ticket( const mbedtls_ssl_context *ssl, mbedtls_ssl_t
 #endif /* MBEDTLS_HAVE_TIME */
 
     return( 0 );
-}
-
-void mbedtls_ssl_conf_client_ticket_enable( mbedtls_ssl_context *ssl )
-{
-    mbedtls_ssl_config *conf;
-    if( ssl == NULL ) return;
-    conf = ( mbedtls_ssl_config * ) ssl->conf;
-    if( conf == NULL ) return;
-    conf->resumption_mode = 1; /* enable resumption mode */
-}
-
-void mbedtls_ssl_conf_client_ticket_disable( mbedtls_ssl_context *ssl )
-{
-    mbedtls_ssl_config *conf;
-
-    if( ssl == NULL ) return;
-    conf = ( mbedtls_ssl_config * ) ssl->conf;
-    if( conf == NULL ) return;
-    conf->resumption_mode = 0; /* set full exchange */
 }
 
 #endif /* MBEDTLS_SSL_NEW_SESSION_TICKET */

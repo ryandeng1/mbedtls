@@ -3756,8 +3756,6 @@ reconnect:
 			mbedtls_printf(" failed\n  ! mbedtls_ssl_conf_client_ticket returned %d\n\n", ret);
 			goto exit;
 		}
-        // enable resumption
-		mbedtls_ssl_conf_client_ticket_enable(&ssl);
 #else 
         if( opt.reco_mode == 1 )
         {
@@ -3841,9 +3839,9 @@ exit:
 #endif
 #endif
 
-#if !defined(MBEDTLS_SSL_NEW_SESSION_TICKET)
+#if !defined(MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL)
     mbedtls_ssl_session_free( &saved_session );
-#endif /* MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL */
+#endif /* !MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL */
     mbedtls_ssl_free( &ssl );
     mbedtls_ssl_config_free( &conf );
     mbedtls_ctr_drbg_free( &ctr_drbg );

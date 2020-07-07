@@ -92,10 +92,6 @@ mbedtls_ssl_ticket_context;
 void mbedtls_ssl_ticket_init( mbedtls_ssl_ticket_context *ctx );
 
 #if defined(MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL) && defined(MBEDTLS_SSL_NEW_SESSION_TICKET)
-
-void mbedtls_ssl_conf_client_ticket_disable(mbedtls_ssl_context* ssl);
-void mbedtls_ssl_conf_client_ticket_enable(mbedtls_ssl_context* ssl);
-
 /**
  * \brief           Allows the caller to set a ticket.
  * 
@@ -112,7 +108,7 @@ void mbedtls_ssl_conf_client_ticket_enable(mbedtls_ssl_context* ssl);
  *                  or a specific MBEDTLS_ERR_XXX error code
  */
 int mbedtls_ssl_conf_client_set_ticket( const mbedtls_ssl_context *ssl,
-                                    mbedtls_ssl_ticket *ticket, unsigned char *buf, uint16_t size, const int key_exchange_mode ); 
+                                    mbedtls_ssl_ticket *ticket, unsigned char *buf, size_t size, const int ke ); 
 
 /**
  * \brief           Allows the caller to retrieve a ticket received in the handshake. 
@@ -135,7 +131,6 @@ int mbedtls_ssl_conf_client_set_ticket( const mbedtls_ssl_context *ssl,
  *                  or a specific MBEDTLS_ERR_SSL_BAD_INPUT_DATA error code
  */
 int mbedtls_ssl_get_client_ticket(const mbedtls_ssl_context* ssl, mbedtls_ssl_ticket* metadata, void *buf, size_t *size);
-
 #endif /* MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL && MBEDTLS_SSL_NEW_SESSION_TICKET */
 
 /**

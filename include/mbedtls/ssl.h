@@ -1420,8 +1420,10 @@ struct mbedtls_ssl_config
 #endif /* MBEDTLS_KEY_EXCHANGE_SOME_PSK_ENABLED */
 
 #if defined(MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL) && defined(MBEDTLS_SSL_NEW_SESSION_TICKET)
-    /*!< Variable to toggle the use of resumption vs. a full exchange.
-    Default value is 0 (for full exchange) and 1 is resumption with ticket.  */
+    /*!< This variable allows to distinugish externally configured PSKs from resumption PSKs. 
+     *   0  -- externally configured PSK
+     *   1  -- resumption PSK
+     */
     int resumption_mode;
 #endif /* MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL && MBEDTLS_SSL_NEW_SESSION_TICKET */
 
