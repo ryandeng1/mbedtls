@@ -405,7 +405,7 @@ int main( void )
 #define USAGE_EARLY_DATA ""
 #endif /* MBEDTLS_ZERO_RTT */
 
-#if defined(MBEDTLS_ECP_C)
+#if defined(MBEDTLS_ECP_C) && defined(MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL)
 #define USAGE_NAMED_GROUP \
     "    named_groups=%%s    default: secp256r1, secp384r1\n"      \
     "                        options: secp256r1, secp384r1, secp521r1, all\n"
@@ -413,7 +413,7 @@ int main( void )
 #define USAGE_NAMED_GROUP ""
 #endif /* MBEDTLS_ECP_C */
 
-#if defined(MBEDTLS_ECP_C)
+#if defined(MBEDTLS_ECP_C) && defined(MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL)
 #define USAGE_KEY_SHARE_NAMED_GROUPS \
     "    key_share_named_groups=%%s    default: secp256r1, secp384r1\n"      \
     "                        options: secp256r1, secp384r1, secp521r1, all\n"
