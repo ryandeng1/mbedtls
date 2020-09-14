@@ -1408,9 +1408,10 @@ int early_data_callback(mbedtls_ssl_context *ssl,
 	// In this example we don't need access to the SSL structure
        ((void) ssl);
 
-	if (len > 0 && buffer != NULL) {
+	if (len > 0 && buffer != NULL) 
+	{
 		buffer[len] = '\0';
-		mbedtls_printf(" %zu bytes early data received: %s\n", len, (char *)buffer);
+		mbedtls_printf( " %zu bytes early data received: %s\n", len, (char *) buffer) ;
 	}
 	return(0);
 }
@@ -2524,10 +2525,10 @@ int main( int argc, char *argv[] )
         {
             opt.cookies = atoi( q );
 #if defined(MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL) 
-            if( opt.cookies < -1 || opt.cookies > 2)
+            if( opt.cookies < -1 || opt.cookies > 2 )
                 goto usage;
 #else 
-            if( opt.cookies < -1 || opt.cookies > 1)
+            if( opt.cookies < -1 || opt.cookies > 1 )
                 goto usage;
 #endif /* MBEDTLS_SSL_COOKIE_C */
         }
@@ -3411,18 +3412,18 @@ int main( int argc, char *argv[] )
         if( opt.cookies == 1 ) 
         {
             mbedtls_ssl_conf_cookies( &conf, mbedtls_ssl_cookie_write, mbedtls_ssl_cookie_check,
-            &cookie_ctx, MBEDTLS_SSL_FORCE_RR_CHECK_OFF );
+                                      &cookie_ctx, MBEDTLS_SSL_FORCE_RR_CHECK_OFF );
         }
 
         if( opt.cookies == 2 ) 
         {
             mbedtls_ssl_conf_cookies( &conf, mbedtls_ssl_cookie_write, mbedtls_ssl_cookie_check,
-            &cookie_ctx, MBEDTLS_SSL_FORCE_RR_CHECK_ON );
+                                      &cookie_ctx, MBEDTLS_SSL_FORCE_RR_CHECK_ON );
         }
     }
     else if( opt.cookies == 0 ) // cookie support disabled
     {
-        mbedtls_ssl_conf_cookies( &conf, NULL, NULL, NULL, MBEDTLS_SSL_FORCE_RR_CHECK_OFF);
+        mbedtls_ssl_conf_cookies( &conf, NULL, NULL, NULL, MBEDTLS_SSL_FORCE_RR_CHECK_OFF );
     }
     else 
 #endif /* MBEDTLS_SSL_COOKIE_C */
@@ -3630,8 +3631,8 @@ int main( int argc, char *argv[] )
 
 #if defined(MBEDTLS_ECP_C)
 #if defined(MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL)
-	if (named_groups_list[0] != MBEDTLS_ECP_DP_NONE)
-		mbedtls_ssl_conf_curves(&conf, named_groups_list);
+    if (named_groups_list[0] != MBEDTLS_ECP_DP_NONE)
+        mbedtls_ssl_conf_curves( &conf, named_groups_list );
 #else 
     if( opt.curves != NULL &&
         strcmp( opt.curves, "default" ) != 0 )
