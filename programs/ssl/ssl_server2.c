@@ -679,7 +679,7 @@ struct options
     int tickets;                /* enable / disable session tickets         */
     int ticket_timeout;         /* session ticket lifetime                  */
 #if defined(MBEDTLS_SSL_NEW_SESSION_TICKET)
-	mbedtls_ssl_ticket_flags ticket_flags;   /* ticket flags                */
+    mbedtls_ssl_ticket_flags ticket_flags;   /* ticket flags                */
 #endif
     int cache_max;              /* max number of session cache entries      */
     int cache_timeout;          /* expiration delay of session cache entries */
@@ -1402,16 +1402,16 @@ int psk_callback( void *p_info, mbedtls_ssl_context *ssl,
 /*
 * Early data callback.
 */
-int early_data_callback(mbedtls_ssl_context *ssl,
-	unsigned char *buffer, size_t len)
+int early_data_callback( mbedtls_ssl_context *ssl,
+	                 unsigned char *buffer, size_t len )
 {
 	// In this example we don't need access to the SSL structure
        ((void) ssl);
 
-	if (len > 0 && buffer != NULL) 
+	if( len > 0 && buffer != NULL ) 
 	{
 		buffer[len] = '\0';
-		mbedtls_printf( " %zu bytes early data received: %s\n", len, (char *) buffer) ;
+		mbedtls_printf( " %zu bytes early data received: %s\n", len, (char *) buffer ) ;
 	}
 	return(0);
 }
