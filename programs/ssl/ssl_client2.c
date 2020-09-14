@@ -599,7 +599,7 @@ struct options
     int skip_close_notify;      /* skip sending the close_notify alert      */
 #if defined(MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL) 
     const char *named_groups_string;    /* list of named groups             */
-    const char *key_share_named_groups_string;    /* list of named groups             */
+    const char *key_share_named_groups_string;    /* list of named groups   */
     int key_exchange_modes;     /* supported key exchange modes  */
 #if defined(MBEDTLS_ZERO_RTT)
     int early_data;             /* support for early data */
@@ -3596,7 +3596,7 @@ reconnect:
 			goto exit;
 		}
         // enable resumption
-		mbedtls_ssl_conf_client_ticket_enable(&ssl);
+		mbedtls_ssl_conf_client_ticket_enable( &ssl );
 #else 
 
         if( opt.reco_mode == 1 )
@@ -3666,7 +3666,7 @@ exit:
     {
         char error_buf[100];
         mbedtls_strerror( ret, error_buf, 100 );
-        mbedtls_printf("Last error was: -0x%X - %s\n\n", (unsigned int) -ret, error_buf );
+        mbedtls_printf( "Last error was: -0x%X - %s\n\n", (unsigned int) -ret, error_buf );
     }
 #endif
 
@@ -3682,7 +3682,7 @@ exit:
 #endif
 
 #if defined(MBEDTLS_SSL_NEW_SESSION_TICKET)
-    mbedtls_ssl_del_client_ticket(&ticket);
+    mbedtls_ssl_del_client_ticket( &ticket );
 #else 
     mbedtls_ssl_session_free( &saved_session );
 #endif /* MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL */
