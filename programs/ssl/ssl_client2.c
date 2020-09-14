@@ -2605,9 +2605,10 @@ int main( int argc, char *argv[] )
 #if defined(MBEDTLS_ECP_C)
 #if defined(MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL)
     if( named_groups_list[0] != MBEDTLS_ECP_DP_NONE )
-		mbedtls_ssl_conf_curves(&conf, named_groups_list);
-	if (key_share_named_groups_list[0] != MBEDTLS_ECP_DP_NONE)
-		mbedtls_ssl_conf_key_share_curves(&conf, key_share_named_groups_list);
+	mbedtls_ssl_conf_curves(&conf, named_groups_list);
+	
+    if( key_share_named_groups_list[0] != MBEDTLS_ECP_DP_NONE )
+	mbedtls_ssl_conf_key_share_curves( &conf, key_share_named_groups_list );
 #else 
     if( opt.curves != NULL &&
         strcmp( opt.curves, "default" ) != 0 )
@@ -3256,14 +3257,14 @@ send_request:
 			goto exit;
 		}
 		else if( ret == 1 ) 
-        {
+		{
 			// no ticket available - we cannot re-connect
 			opt.reconnect = 0;
 			mbedtls_printf( "no ticket available\n" );
 
 		}
 		else if( ret == 0 ) 
-        {
+		{
 			mbedtls_printf( "got ticket\n" );
 		}
 	}
