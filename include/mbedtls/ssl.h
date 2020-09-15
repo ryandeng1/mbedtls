@@ -416,7 +416,7 @@
  /* ECDSA algorithms */
 
 #define SIGNATURE_ECDSA_SECP256r1_SHA256 0x0403 // 1027
-#define	SIGNATURE_ECDSA_SECP384r1_SHA384 0x0503 // 1283
+#define    SIGNATURE_ECDSA_SECP384r1_SHA384 0x0503 // 1283
 #define SIGNATURE_ECDSA_SECP521r1_SHA512 0x0603 // 1539
 #define SIGNATURE_NONE 0x0
 
@@ -1606,19 +1606,19 @@ struct mbedtls_ssl_context
     int nb_zero;                /*!< # of 0-length encrypted messages */
 
 
-	/* The following two variables indicate if and, if yes,
-	 * what kind of alert or warning is pending to be sent.
-	 * They should not be set manually but through the macros
-	 * SSL_PEND_FATAL_ALERT( TYPE ) and SSL_PEND_WARNING( TYPE )
-	 * defined below. */
-	unsigned char send_alert;   /*!< Determines if either a fatal error
-									 or a warning should be sent. Values:
-									 - \c 0 if no alert is to be sent.
-									 - #MBEDTLS_SSL_ALERT_LEVEL_FATAL
-									   if a fatal alert is to be sent
-									 - #MBEDTLS_SSL_ALERT_LEVEL_WARNING
-									   if a non-fatal alert is to be sent. */
-	unsigned char alert_type;   /*!< Type of alert if send_alert != 0 */
+    /* The following two variables indicate if and, if yes,
+     * what kind of alert or warning is pending to be sent.
+     * They should not be set manually but through the macros
+     * SSL_PEND_FATAL_ALERT( TYPE ) and SSL_PEND_WARNING( TYPE )
+     * defined below. */
+    unsigned char send_alert;   /*!< Determines if either a fatal error
+                                     or a warning should be sent. Values:
+                                     - \c 0 if no alert is to be sent.
+                                     - #MBEDTLS_SSL_ALERT_LEVEL_FATAL
+                                       if a fatal alert is to be sent
+                                     - #MBEDTLS_SSL_ALERT_LEVEL_WARNING
+                                       if a non-fatal alert is to be sent. */
+    unsigned char alert_type;   /*!< Type of alert if send_alert != 0 */
     int keep_current_message;   /*!< drop or reuse current message
                                      on next call to record layer? */
 

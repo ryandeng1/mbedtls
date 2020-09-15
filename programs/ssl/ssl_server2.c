@@ -712,9 +712,9 @@ struct options
                                  * after renegotiation                      */
     int reproducible;           /* make communication reproducible          */
 #if defined(MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL) 
-	unsigned char key_exchange_modes; /* key exchange modes  */
-	int early_data;             /* support for early data */
-	const char *named_groups_string;    /* list of named groups             */
+    unsigned char key_exchange_modes; /* key exchange modes  */
+    int early_data;             /* support for early data */
+    const char *named_groups_string;    /* list of named groups             */
 #endif /* MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL */
 } opt;
 
@@ -1403,17 +1403,17 @@ int psk_callback( void *p_info, mbedtls_ssl_context *ssl,
 * Early data callback.
 */
 int early_data_callback( mbedtls_ssl_context *ssl,
-	                 unsigned char *buffer, size_t len )
+                     unsigned char *buffer, size_t len )
 {
-	// In this example we don't need access to the SSL structure
-       ((void) ssl);
+    // In this example we don't need access to the SSL structure
+    ((void) ssl);
 
-	if( len > 0 && buffer != NULL ) 
-	{
-		buffer[len] = '\0';
-		mbedtls_printf( " %zu bytes early data received: %s\n", len, (char *) buffer ) ;
-	}
-	return(0);
+    if( len > 0 && buffer != NULL ) 
+    {
+        buffer[len] = '\0';
+        mbedtls_printf( " %zu bytes early data received: %s\n", len, (char *) buffer ) ;
+    }
+    return(0);
 }
 #endif /* MBEDTLS_ZERO_RTT */
 
@@ -1836,8 +1836,8 @@ int main( int argc, char *argv[] )
     mbedtls_ssl_cookie_ctx cookie_ctx;
 #endif
 #if defined(MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL) && defined(MBEDTLS_ECP_C)
-	mbedtls_ecp_group_id named_groups_list[MAX_NAMED_GROUPS]; /* list of named groups */
-	char *start;
+    mbedtls_ecp_group_id named_groups_list[MAX_NAMED_GROUPS]; /* list of named groups */
+    char *start;
 
 #endif /* MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL && MBEDTLS_ECP_C */
 
@@ -1891,8 +1891,8 @@ int main( int argc, char *argv[] )
 #endif
 
 #if defined(MBEDTLS_ZERO_RTT)
-	char early_data_buf[50];
-	unsigned int early_data_len;
+    char early_data_buf[50];
+    unsigned int early_data_len;
 #endif
 
 #if defined(MBEDTLS_SSL_DTLS_CONNECTION_ID)
@@ -1957,7 +1957,7 @@ int main( int argc, char *argv[] )
     memset( (void *) alpn_list, 0, sizeof( alpn_list ) );
 #endif
 #if defined(MBEDTLS_ECP_C) && defined(MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL) 
-	memset((void *)named_groups_list, MBEDTLS_ECP_DP_NONE, sizeof(named_groups_list));
+    memset((void *)named_groups_list, MBEDTLS_ECP_DP_NONE, sizeof(named_groups_list));
 #endif
 
 #if defined(MBEDTLS_SSL_COOKIE_C)
@@ -2034,9 +2034,9 @@ int main( int argc, char *argv[] )
     opt.async_private_error = DFL_ASYNC_PRIVATE_ERROR;
     opt.psk                 = DFL_PSK;
 #if defined(MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL) 
-	opt.key_exchange_modes = DFL_KEY_EXCHANGE_MODES;
+    opt.key_exchange_modes = DFL_KEY_EXCHANGE_MODES;
 #if defined(MBEDTLS_SSL_NEW_SESSION_TICKET)
-	opt.ticket_flags        = DFL_TICKET_FLAGS;
+    opt.ticket_flags        = DFL_TICKET_FLAGS;
 #endif /* MBEDTLS_SSL_NEW_SESSION_TICKET */
 #if defined(MBEDTLS_ZERO_RTT)
     opt.early_data          = DFL_EARLY_DATA;
@@ -2289,33 +2289,33 @@ int main( int argc, char *argv[] )
 
 #if defined(MBEDTLS_ZERO_RTT)
         else if( strcmp( p, "early_data" ) == 0 )
-		{
-			if( strcmp( q, "disabled" ) == 0 )
-				opt.early_data = MBEDTLS_SSL_EARLY_DATA_DISABLED;
-			else if( strcmp( q, "enabled" ) == 0 )
-				opt.early_data = MBEDTLS_SSL_EARLY_DATA_ENABLED;
-			else goto usage;
-		}
+        {
+            if( strcmp( q, "disabled" ) == 0 )
+                opt.early_data = MBEDTLS_SSL_EARLY_DATA_DISABLED;
+            else if( strcmp( q, "enabled" ) == 0 )
+                opt.early_data = MBEDTLS_SSL_EARLY_DATA_ENABLED;
+            else goto usage;
+        }
 #endif /* MBEDTLS_ZERO_RTT */
 
 #if defined(MBEDTLS_ECP_C)
-		else if( strcmp( p, "named_groups" ) == 0 )
-			opt.named_groups_string = q;
+        else if( strcmp( p, "named_groups" ) == 0 )
+            opt.named_groups_string = q;
 #endif /* MBEDTLS_ECP_C */
 
         else if( strcmp( p, "key_exchange_modes" ) == 0 ) 
         {
-			if( strcmp( q, "psk" ) == 0 )
-				opt.key_exchange_modes = MBEDTLS_SSL_TLS13_KEY_EXCHANGE_MODE_PSK_KE;
-			else if( strcmp(q, "psk_dhe" ) == 0 )
-				opt.key_exchange_modes = MBEDTLS_SSL_TLS13_KEY_EXCHANGE_MODE_PSK_DHE_KE;
-			else if( strcmp(q, "ecdhe_ecdsa" ) == 0 )
-				opt.key_exchange_modes = MBEDTLS_SSL_TLS13_KEY_EXCHANGE_MODE_ECDHE_ECDSA;
-			else if( strcmp( q, "psk_all" ) == 0 )
-				opt.key_exchange_modes = MBEDTLS_SSL_TLS13_KEY_EXCHANGE_MODE_PSK_ALL;
-			else if( strcmp( q, "all" ) == 0 )
-				opt.key_exchange_modes = MBEDTLS_SSL_TLS13_KEY_EXCHANGE_MODE_ALL;
-			else goto usage;
+            if( strcmp( q, "psk" ) == 0 )
+                opt.key_exchange_modes = MBEDTLS_SSL_TLS13_KEY_EXCHANGE_MODE_PSK_KE;
+            else if( strcmp(q, "psk_dhe" ) == 0 )
+                opt.key_exchange_modes = MBEDTLS_SSL_TLS13_KEY_EXCHANGE_MODE_PSK_DHE_KE;
+            else if( strcmp(q, "ecdhe_ecdsa" ) == 0 )
+                opt.key_exchange_modes = MBEDTLS_SSL_TLS13_KEY_EXCHANGE_MODE_ECDHE_ECDSA;
+            else if( strcmp( q, "psk_all" ) == 0 )
+                opt.key_exchange_modes = MBEDTLS_SSL_TLS13_KEY_EXCHANGE_MODE_PSK_ALL;
+            else if( strcmp( q, "all" ) == 0 )
+                opt.key_exchange_modes = MBEDTLS_SSL_TLS13_KEY_EXCHANGE_MODE_ALL;
+            else goto usage;
         }
 #endif /* MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL */
         else if( strcmp( p, "min_version" ) == 0 )
@@ -2332,8 +2332,8 @@ int main( int argc, char *argv[] )
                 opt.min_version = MBEDTLS_SSL_MINOR_VERSION_3;
 #if defined(MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL) 
             else if( strcmp( q, "tls1_3" ) == 0 ||
-				strcmp( q, "dtls1_3" ) == 0 )
-				opt.min_version = MBEDTLS_SSL_MINOR_VERSION_4;
+                     strcmp( q, "dtls1_3" ) == 0 )
+                opt.min_version = MBEDTLS_SSL_MINOR_VERSION_4;
 #endif /* MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL */
             else
                 goto usage;
@@ -2352,8 +2352,8 @@ int main( int argc, char *argv[] )
                 opt.max_version = MBEDTLS_SSL_MINOR_VERSION_3;
 #if defined(MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL) 
             else if( strcmp( q, "tls1_3" ) == 0 ||
-				strcmp( q, "dtls1_3" ) == 0 )
-				opt.min_version = MBEDTLS_SSL_MINOR_VERSION_4;
+                     strcmp( q, "dtls1_3" ) == 0 )
+                opt.min_version = MBEDTLS_SSL_MINOR_VERSION_4;
 #endif /* MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL */
             else
                 goto usage;
@@ -2399,11 +2399,11 @@ int main( int argc, char *argv[] )
                 opt.max_version = MBEDTLS_SSL_MINOR_VERSION_3;
             }
 #if defined(MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL) 
-			else if( strcmp( q, "tls1_3" ) == 0 )
-			{
-				opt.min_version = MBEDTLS_SSL_MINOR_VERSION_4;
-				opt.max_version = MBEDTLS_SSL_MINOR_VERSION_4;
-			}
+            else if( strcmp( q, "tls1_3" ) == 0 )
+            {
+                opt.min_version = MBEDTLS_SSL_MINOR_VERSION_4;
+                opt.max_version = MBEDTLS_SSL_MINOR_VERSION_4;
+            }
 #endif /* MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL */
             else if( strcmp( q, "dtls1" ) == 0 )
             {
@@ -2418,12 +2418,12 @@ int main( int argc, char *argv[] )
                 opt.transport = MBEDTLS_SSL_TRANSPORT_DATAGRAM;
             }
 #if defined(MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL) 
-			else if( strcmp( q, "dtls1_3" ) == 0 )
-			{
-				opt.min_version = MBEDTLS_SSL_MINOR_VERSION_4;
-				opt.max_version = MBEDTLS_SSL_MINOR_VERSION_4;
+            else if( strcmp( q, "dtls1_3" ) == 0 )
+            {
+                opt.min_version = MBEDTLS_SSL_MINOR_VERSION_4;
+                opt.max_version = MBEDTLS_SSL_MINOR_VERSION_4;
                 opt.transport = MBEDTLS_SSL_TRANSPORT_DATAGRAM;
-			}
+            }
 #endif /* MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL */
             else
                 goto usage;
@@ -2507,7 +2507,7 @@ int main( int argc, char *argv[] )
             {
                 opt.ticket_flags = temp & ( mbedtls_ssl_ticket_flags ) allow_early_data & ( mbedtls_ssl_ticket_flags ) allow_dhe_resumption & ( mbedtls_ssl_ticket_flags ) allow_psk_resumption;
             } else goto usage;
-		}
+        }
 #endif
         else if( strcmp( p, "cache_max" ) == 0 )
         {
@@ -2911,44 +2911,45 @@ int main( int argc, char *argv[] )
 #endif /* MBEDTLS_SSL_ALPN */
 
     #if defined(MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL) && defined(MBEDTLS_ECP_C)
-	if( opt.named_groups_string != NULL )
-	{
-		p = (char *)opt.named_groups_string;
-		i = 0;
-		start = p;
+    if( opt.named_groups_string != NULL )
+    {
+        p = (char *)opt.named_groups_string;
+        i = 0;
+        start = p;
 
-		/* Leave room for a final NULL in named_groups_list */
-		while( i < (int) sizeof named_groups_list - 1 && *p != '\0' )
-		{
+        /* Leave room for a final NULL in named_groups_list */
+        while( i < (int) sizeof named_groups_list - 1 && *p != '\0' )
+        {
 
-			while( *p != ',' && *p != '\0' )
-				p++;
+            while( *p != ',' && *p != '\0' )
+                p++;
 
-			if( *p == ',' || *p == '\0' ) 
+            if( *p == ',' || *p == '\0' ) 
             {
 
-				if( *p == ',' )	*p++ = '\0';
+                if( *p == ',' ) 
+                    *p++ = '\0';
 
-				if( strcmp( start, "secp256r1" ) == 0 )
-					named_groups_list[i++] = MBEDTLS_ECP_DP_SECP256R1;
-				else if( strcmp( start, "secp384r1" ) == 0 )
-					named_groups_list[i++] = MBEDTLS_ECP_DP_SECP384R1;
-				else if( strcmp( start, "secp521r1" ) == 0 )
-					named_groups_list[i++] = MBEDTLS_ECP_DP_SECP521R1;
-				else if( strcmp( start, "all" ) == 0 ) 
+                if( strcmp( start, "secp256r1" ) == 0 )
+                    named_groups_list[i++] = MBEDTLS_ECP_DP_SECP256R1;
+                else if( strcmp( start, "secp384r1" ) == 0 )
+                    named_groups_list[i++] = MBEDTLS_ECP_DP_SECP384R1;
+                else if( strcmp( start, "secp521r1" ) == 0 )
+                    named_groups_list[i++] = MBEDTLS_ECP_DP_SECP521R1;
+                else if( strcmp( start, "all" ) == 0 ) 
                 {
-					named_groups_list[i++] = MBEDTLS_ECP_DP_SECP256R1;
-					named_groups_list[i++] = MBEDTLS_ECP_DP_SECP384R1;
-					named_groups_list[i++] = MBEDTLS_ECP_DP_SECP521R1;
-					break;
-				}
-				else goto usage;
-				start = p;
-			}
-		}
+                    named_groups_list[i++] = MBEDTLS_ECP_DP_SECP256R1;
+                    named_groups_list[i++] = MBEDTLS_ECP_DP_SECP384R1;
+                    named_groups_list[i++] = MBEDTLS_ECP_DP_SECP521R1;
+                    break;
+                }
+                else goto usage;
+                start = p;
+            }
+        }
 
-		if( i == 0 ) goto usage;
-	}
+        if( i == 0 ) goto usage;
+    }
 #endif /* MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL && MBEDTLS_ECP_C */
 
 
@@ -3242,8 +3243,8 @@ int main( int argc, char *argv[] )
         mbedtls_ssl_conf_cert_req_ca_list( &conf, opt.cert_req_ca_list );
 
 #if defined(MBEDTLS_ZERO_RTT)
-	early_data_len = sizeof( early_data_buf )-1;
-	mbedtls_ssl_conf_early_data( &conf, opt.early_data, early_data_buf, early_data_len, early_data_callback );
+    early_data_len = sizeof( early_data_buf )-1;
+    mbedtls_ssl_conf_early_data( &conf, opt.early_data, early_data_buf, early_data_len, early_data_callback );
 #endif /* MBEDTLS_ZERO_RTT */
 
 #if defined(MBEDTLS_SSL_PROTO_DTLS)
@@ -3328,8 +3329,8 @@ int main( int argc, char *argv[] )
 #endif
 
 #if defined(MBEDTLS_ECP_C) && defined(MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL)  
-	if( named_groups_list[0] != MBEDTLS_ECP_DP_NONE )
-		mbedtls_ssl_conf_curves( &conf, named_groups_list );
+    if( named_groups_list[0] != MBEDTLS_ECP_DP_NONE )
+        mbedtls_ssl_conf_curves( &conf, named_groups_list );
 #endif
 
 
@@ -3952,9 +3953,9 @@ handshake:
         mbedtls_printf( "    [ Record expansion (outgoing) is unknown]\n" );
 
     if( ( ret = mbedtls_ssl_get_record_expansion( &ssl, MBEDTLS_SSL_DIRECTION_IN ) ) >= 0 )
-		mbedtls_printf( "    [ Record expansion (incoming) is %d ]\n", ret );
-	else
-		mbedtls_printf( "    [ Record expansion (incoming) is unknown]\n" );
+        mbedtls_printf( "    [ Record expansion (incoming) is %d ]\n", ret );
+    else
+        mbedtls_printf( "    [ Record expansion (incoming) is unknown]\n" );
 #else 
     if( ( ret = mbedtls_ssl_get_record_expansion( &ssl ) ) >= 0 )
         mbedtls_printf( "    [ Record expansion is %d ]\n", ret );
