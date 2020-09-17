@@ -2538,10 +2538,17 @@ int main( int argc, char *argv[] )
             opt.cookies = atoi( q );
 #if defined(MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL) 
             if( opt.cookies < -1 || opt.cookies > 2 )
+<<<<<<< HEAD
                 goto usage;
 #else 
             if( opt.cookies < -1 || opt.cookies > 1 )
                 goto usage;
+=======
+                goto usage;
+#else 
+            if( opt.cookies < -1 || opt.cookies > 1 )
+                goto usage;
+>>>>>>> fix_examples
 #endif /* MBEDTLS_SSL_COOKIE_C */
         }
         else if( strcmp( p, "anti_replay" ) == 0 )
