@@ -4354,6 +4354,15 @@ void mbedtls_ssl_conf_authmode( mbedtls_ssl_config *conf, int authmode )
     conf->authmode   = authmode;
 }
 
+#if defined(MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL) && defined(MBEDTLS_X509_CRT_PARSE_C)
+void mbedtls_ssl_conf_signature_algorithms( mbedtls_ssl_config *conf,
+                     const int* sig_algs )
+{
+    conf->signature_schemes = sig_algs; 
+}
+#endif /* MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL && MBEDTLS_X509_CRT_PARSE_C */
+
+
 #if defined(MBEDTLS_X509_CRT_PARSE_C)
 void mbedtls_ssl_conf_verify( mbedtls_ssl_config *conf,
                      int (*f_vrfy)(void *, mbedtls_x509_crt *, int, uint32_t *),
@@ -7178,9 +7187,7 @@ void mbedtls_ssl_config_init( mbedtls_ssl_config *conf )
     memset( conf, 0, sizeof( mbedtls_ssl_config ) );
 }
 
-#if !defined(MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL)
-
-#if defined(MBEDTLS_KEY_EXCHANGE_WITH_CERT_ENABLED)
+#if defined(MBEDTLS_KEY_EXCHANGE_WITH_CERT_ENABLED) && !defined(MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL)
 static int ssl_preset_default_hashes[] = {
 #if defined(MBEDTLS_SHA512_C)
     MBEDTLS_MD_SHA512,
@@ -7195,13 +7202,15 @@ static int ssl_preset_default_hashes[] = {
 #endif
     MBEDTLS_MD_NONE
 };
-#endif
+#endif /* MBEDTLS_KEY_EXCHANGE_WITH_CERT_ENABLED && !MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL */
 
+#if !defined(MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL)
 static int ssl_preset_suiteb_ciphersuites[] = {
     MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
     MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
     0
 };
+#endif /* !MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL */
 
 #if defined(MBEDTLS_KEY_EXCHANGE_WITH_CERT_ENABLED)
 static int ssl_preset_suiteb_hashes[] = {
@@ -7210,39 +7219,44 @@ static int ssl_preset_suiteb_hashes[] = {
     MBEDTLS_MD_NONE
 };
 #endif
-#else
-static int ssl_preset_suiteb_ciphersuites[] = {
+
+#if defined(MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL)
+static int ssl_preset_suiteb_ciphersuites_tls13[] = {
+#if defined(MBEDTLS_SHA256_C) && defined(MBEDTLS_AES_C) && defined(MBEDTLS_GCM_C)
     TLS_AES_128_GCM_SHA256,
+#endif
+#if defined(MBEDTLS_SHA512_C) && defined(MBEDTLS_AES_C) && defined(MBEDTLS_GCM_C)
     TLS_AES_256_GCM_SHA384,
+#endif
     0
 };
+#endif /* MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL */
 
 #if defined(MBEDTLS_KEY_EXCHANGE_WITH_CERT_ENABLED)
 static int ssl_preset_suiteb_signature_schemes[] = {
-#if defined(MBEDTLS_ECDSA_SECP256r1_SHA256)
+#if defined(MBEDTLS_SHA256_C) && defined(MBEDTLS_ECDSA_C) && defined(MBEDTLS_ECP_DP_SECP256R1_ENABLED)
     SIGNATURE_ECDSA_SECP256r1_SHA256,
 #endif
-#if defined(MBEDTLS_ECDSA_SECP384r1_SHA384)
+#if defined(MBEDTLS_SHA512_C) && defined(MBEDTLS_ECDSA_C) && defined(MBEDTLS_ECP_DP_SECP384R1_ENABLED)
     SIGNATURE_ECDSA_SECP384r1_SHA384,
 #endif
-#if defined(MBEDTLS_ECDSA_SECP521r1_SHA512)
+#if defined(MBEDTLS_SHA512_C) && defined(MBEDTLS_ECDSA_C) && defined(MBEDTLS_ECP_DP_SECP521R1_ENABLED)
     SIGNATURE_ECDSA_SECP521r1_SHA512,
 #endif
     SIGNATURE_NONE
 };
 #endif /* MBEDTLS_KEY_EXCHANGE_WITH_CERT_ENABLED   */
 
-#endif /* MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL */
 
 #if defined(MBEDTLS_KEY_EXCHANGE_WITH_CERT_ENABLED) && defined(MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL)
 static int ssl_preset_signature_schemes[] = {
-#if defined(MBEDTLS_ECDSA_SECP256r1_SHA256)
+#if defined(MBEDTLS_SHA256_C) && defined(MBEDTLS_ECDSA_C) && defined(MBEDTLS_ECP_DP_SECP256R1_ENABLED)
     SIGNATURE_ECDSA_SECP256r1_SHA256,
 #endif
-#if defined(MBEDTLS_ECDSA_SECP384r1_SHA384)
+#if defined(MBEDTLS_SHA512_C) && defined(MBEDTLS_ECDSA_C) && defined(MBEDTLS_ECP_DP_SECP384R1_ENABLED)
     SIGNATURE_ECDSA_SECP384r1_SHA384,
 #endif
-#if defined(MBEDTLS_ECDSA_SECP521r1_SHA512)
+#if defined(MBEDTLS_SHA512_C) && defined(MBEDTLS_ECDSA_C) && defined(MBEDTLS_ECP_DP_SECP521R1_ENABLED)
     SIGNATURE_ECDSA_SECP521r1_SHA512,
 #endif
     SIGNATURE_NONE
@@ -7367,18 +7381,19 @@ int mbedtls_ssl_config_defaults( mbedtls_ssl_config *conf,
             conf->ciphersuite_list[MBEDTLS_SSL_MINOR_VERSION_3] =
 #if defined(MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL)
             conf->ciphersuite_list[MBEDTLS_SSL_MINOR_VERSION_4] =
-#endif /* MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL */
+            ssl_preset_suiteb_ciphersuites_tls13;
+#else 
             ssl_preset_suiteb_ciphersuites;
+#endif /* MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL */
 
 #if defined(MBEDTLS_X509_CRT_PARSE_C)
             conf->cert_profile = &mbedtls_x509_crt_profile_suiteb;
 #endif
 
 #if defined(MBEDTLS_KEY_EXCHANGE_WITH_CERT_ENABLED)
-#if !defined(MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL)
-        conf->sig_hashes = ssl_preset_suiteb_hashes;
-#else
-        conf->signature_schemes = ssl_preset_suiteb_signature_schemes;
+            conf->sig_hashes = ssl_preset_suiteb_hashes;
+#if defined(MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL)
+            conf->signature_schemes = ssl_preset_suiteb_signature_schemes;
 #endif /* MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL */
 #endif /* MBEDTLS_KEY_EXCHANGE_WITH_CERT_ENABLED */
 

@@ -1312,9 +1312,9 @@ struct mbedtls_ssl_config
     void *p_async_config_data; /*!< Configuration data set by mbedtls_ssl_conf_async_private_cb(). */
 #endif /* MBEDTLS_SSL_ASYNC_PRIVATE */
 
-#if defined(MBEDTLS_KEY_EXCHANGE_WITH_CERT_ENABLED)  && !defined(MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL)
+#if defined(MBEDTLS_KEY_EXCHANGE_WITH_CERT_ENABLED)
     const int* sig_hashes;          /*!< allowed signature hashes in TLS 1.2 */
-#endif
+#endif /* MBEDTLS_KEY_EXCHANGE_WITH_CERT_ENABLED */
 
 #if defined(MBEDTLS_KEY_EXCHANGE_WITH_CERT_ENABLED) && defined(MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL)
     const int* signature_schemes;  /*!< supported signature schemes in TLS 1.3 */
@@ -1916,6 +1916,24 @@ void mbedtls_ssl_conf_authmode( mbedtls_ssl_config *conf, int authmode );
 void mbedtls_ssl_conf_early_data(mbedtls_ssl_config* conf, int early_data, char* buffer, unsigned int len, int(*early_data_callback)(mbedtls_ssl_context*,
     unsigned char*, size_t));
 #endif /* MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL && MBEDTLS_ZERO_RTT */
+
+/**
+ * \brief          Set the signature algorithms (Optional).
+ *
+ *                 If set, the signature algorithms will be advertised in 
+ *                 the signature_algorithms extension in the ClientHello of 
+ *                 TLS/DTLS 1.3. 
+ *
+ *
+ * \param conf     The SSL configuration to use.
+ * \param sig_algs A list of signature algorithms with the most preferred algorithm listed first.  
+ *  
+ *                 Note: sig_algs must be terminated with MBEDTLS_SIG_NONE. 
+ */
+#if defined(MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL) && defined(MBEDTLS_X509_CRT_PARSE_C)
+void mbedtls_ssl_conf_signature_algorithms( mbedtls_ssl_config *conf,
+                     const int* sig_algs );
+#endif /* MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL && MBEDTLS_X509_CRT_PARSE_C */
 
 #if defined(MBEDTLS_X509_CRT_PARSE_C)
 /**
