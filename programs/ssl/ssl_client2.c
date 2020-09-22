@@ -158,7 +158,7 @@ int main( void )
 #define DFL_NSS_KEYLOG          0
 #define DFL_NSS_KEYLOG_FILE     NULL
 #define DFL_SKIP_CLOSE_NOTIFY   0
-#define DFL_SIG_ALGS            "ecdsa_secp256r1_sha256"
+#define DFL_SIG_ALGS            NULL
 
 #define GET_REQUEST "GET %s HTTP/1.0\r\nExtra-header: "
 #define GET_REQUEST_END "\r\n\r\n"
@@ -329,7 +329,7 @@ int main( void )
 #if defined(MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL) && defined(MBEDTLS_X509_CRT_PARSE_C)
 #define USAGE_SIG_ALGS \
     "    sig_algs=a,b,c,d      default: \"default\" (library default: ecdsa_secp256r1_sha256)\n"  \
-    "                        example: \"ecdsa_secp256r1_sha256, ecdsa_secp384r1_sha384\"\n"  
+    "                        example: \"ecdsa_secp256r1_sha256,ecdsa_secp384r1_sha384\"\n"  
 #else
 #define USAGE_SIG_ALGS ""
 #endif
@@ -436,7 +436,7 @@ int main( void )
 
 #if defined(MBEDTLS_ECP_C) && defined(MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL)
 #define USAGE_KEY_SHARE_NAMED_GROUPS \
-    "    key_share_named_groups=%%s    default: secp256r1, secp384r1\n"      \
+    "    key_share_named_groups=%%s    default: secp256r1,secp384r1\n"      \
     "                        options: secp256r1, secp384r1, secp521r1, all\n"
 #else
 #define USAGE_KEY_SHARE_NAMED_GROUPS ""
@@ -1047,17 +1047,15 @@ static int ssl_sig_hashes_for_test[] = {
 
 #if defined(MBEDTLS_KEY_EXCHANGE_WITH_CERT_ENABLED) && defined(MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL)
 static int ssl_sig_hashes_for_test_tls13[] = {
-/*#if defined(MBEDTLS_SHA256_C) && defined(MBEDTLS_ECDSA_C) && defined(MBEDTLS_ECP_DP_SECP256R1_ENABLED)
+#if defined(MBEDTLS_SHA256_C) && defined(MBEDTLS_ECDSA_C) && defined(MBEDTLS_ECP_DP_SECP256R1_ENABLED)
     SIGNATURE_ECDSA_SECP256r1_SHA256,
 #endif
-*/
 #if defined(MBEDTLS_SHA512_C) && defined(MBEDTLS_ECDSA_C) && defined(MBEDTLS_ECP_DP_SECP384R1_ENABLED)
     SIGNATURE_ECDSA_SECP384r1_SHA384,
 #endif
-/*#if defined(MBEDTLS_SHA512_C) && defined(MBEDTLS_ECDSA_C) && defined(MBEDTLS_ECP_DP_SECP521R1_ENABLED)
+#if defined(MBEDTLS_SHA512_C) && defined(MBEDTLS_ECDSA_C) && defined(MBEDTLS_ECP_DP_SECP521R1_ENABLED)
     SIGNATURE_ECDSA_SECP521r1_SHA512,
 #endif
-*/
     SIGNATURE_NONE
 };
 #endif /* MBEDTLS_KEY_EXCHANGE_WITH_CERT_ENABLED && MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL */
@@ -2242,67 +2240,69 @@ int main( int argc, char *argv[] )
     }
 #endif /* MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL && MBEDTLS_ECP_C */
 
-    #if defined(MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL) && defined(MBEDTLS_X509_CRT_PARSE_C)
-    if( opt.sig_algs != NULL )
+#if defined(MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL) && defined(MBEDTLS_X509_CRT_PARSE_C)
+     if( opt.sig_algs != NULL )
     {
         p = (char *) opt.sig_algs;
         i = 0;
 
-        if( strcmp( p, "default" ) != 0 )
+        /* Leave room for a final NULL in curve list */
+        while( i < SIG_ALG_LIST_SIZE - 1 && *p != '\0' )
         {
-            /* Leave room for a final NULL in curve list */
-            while( i < SIG_ALG_LIST_SIZE - 1 && *p != '\0' )
+            q = p;
+
+            /* Terminate the current string */
+            while( *p != ',' && *p != '\0' )
+                p++;
+            if( *p == ',' )
+                *p++ = '\0';
+
+            if( strcmp( q, "ecdsa_secp256r1_sha256" ) == 0 )
             {
-                q = p;
-
-                /* Terminate the current string */
-                while( *p != ',' && *p != '\0' )
-                    p++;
-                if( *p == ',' )
-                    *p++ = '\0';
-
-                if( strcmp( q, "ecdsa_secp256r1_sha256" ) == 0 )
-                {
-                    sig_alg_list [i++] = SIGNATURE_ECDSA_SECP256r1_SHA256;
-                }
-                else if( strcmp( q, "ecdsa_secp384r1_sha384" ) == 0 )
-                {
-                    sig_alg_list [i++] = SIGNATURE_ECDSA_SECP384r1_SHA384;
-                }
-                else if( strcmp( q, "ecdsa_secp521r1_sha512" ) == 0 )
-                {
-                    sig_alg_list [i++] = SIGNATURE_ECDSA_SECP521r1_SHA512;
-                }
-                else
-                {
-                    mbedtls_printf( "unknown signature algorithm %s\n", q );
-                    mbedtls_printf( "supported signature algorithms: " );
+                sig_alg_list[i++] = SIGNATURE_ECDSA_SECP256r1_SHA256;
+            }
+            else if( strcmp( q, "ecdsa_secp384r1_sha384" ) == 0 )
+            {
+                sig_alg_list[i++] = SIGNATURE_ECDSA_SECP384r1_SHA384;
+            }
+            else if( strcmp( q, "ecdsa_secp521r1_sha512" ) == 0 )
+            {
+                sig_alg_list[i++] = SIGNATURE_ECDSA_SECP521r1_SHA512;
+            }
+            else
+            {
+                mbedtls_printf( "unknown signature algorithm %s\n", q );
+                mbedtls_printf( "supported signature algorithms: " );
 #if defined(MBEDTLS_SHA256_C) && defined(MBEDTLS_ECDSA_C) && defined(MBEDTLS_ECP_DP_SECP256R1_ENABLED)
-                    mbedtls_printf( "ecdsa_secp256r1_sha256 " );
+                mbedtls_printf( "ecdsa_secp256r1_sha256 " );
 #endif
 #if defined(MBEDTLS_SHA512_C) && defined(MBEDTLS_ECDSA_C) && defined(MBEDTLS_ECP_DP_SECP384R1_ENABLED)
-                    mbedtls_printf( "ecdsa_secp384r1_sha384 " );
+                mbedtls_printf( "ecdsa_secp384r1_sha384 " );
 #endif
 #if defined(MBEDTLS_SHA512_C) && defined(MBEDTLS_ECDSA_C) && defined(MBEDTLS_ECP_DP_SECP521R1_ENABLED)
-                    mbedtls_printf( "ecdsa_secp521r1_sha512 " );
+                mbedtls_printf( "ecdsa_secp521r1_sha512 " );
 #endif
-                    mbedtls_printf( "\n" );
-                    goto exit;
-                }
-            }
-
-            mbedtls_printf("Number of signature algorithms: %d\n", i );
-
-            if( i == SIG_ALG_LIST_SIZE - 1 && *p != '\0' )
-            {
-                mbedtls_printf( "signature algorithm list too long, maximum %d",
-                                SIG_ALG_LIST_SIZE - 1 );
+                mbedtls_printf( "\n" );
                 goto exit;
             }
-
-            sig_alg_list [i] = SIGNATURE_NONE;
         }
+
+        if( i == ( SIG_ALG_LIST_SIZE - 1 ) && *p != '\0' )
+        {
+            mbedtls_printf( "signature algorithm list too long, maximum %d",
+                            SIG_ALG_LIST_SIZE - 1 );
+            goto exit;
+        }
+
+        sig_alg_list[i] = SIGNATURE_NONE;
+    } else 
+    {
+        /* Configure default signature algorithm */
+        sig_alg_list[i++] = SIGNATURE_ECDSA_SECP256r1_SHA256;
+        sig_alg_list[i] = SIGNATURE_NONE;
     }
+        
+    mbedtls_printf("Number of signature algorithms: %d\n", i );
 #endif /* MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL && MBEDTLS_X509_CRT_PARSE_C */
 
     /*
