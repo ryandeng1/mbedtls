@@ -3160,7 +3160,7 @@ int mbedtls_ssl_generate_application_traffic_keys( mbedtls_ssl_context *ssl, mbe
     ret = mbedtls_ssl_tls1_3_derive_secret( mbedtls_md_get_type( md_info ),
                          ssl->handshake->master_secret, mbedtls_hash_size_for_ciphersuite( suite_info ),
                          MBEDTLS_SSL_TLS1_3_LBL_WITH_LEN( c_ap_traffic ),
-                         padbuf, mbedtls_hash_size_for_ciphersuite( suite_info ), MBEDTLS_SSL_TLS1_3_CONTEXT_HASHED,
+                         ssl->handshake->digest, mbedtls_hash_size_for_ciphersuite( suite_info ), MBEDTLS_SSL_TLS1_3_CONTEXT_HASHED,
                          ssl->handshake->client_traffic_secret, mbedtls_hash_size_for_ciphersuite( suite_info ) );
 
     if( ret != 0 )
@@ -3195,7 +3195,7 @@ int mbedtls_ssl_generate_application_traffic_keys( mbedtls_ssl_context *ssl, mbe
     ret = mbedtls_ssl_tls1_3_derive_secret( mbedtls_md_get_type( md_info ),
                          ssl->handshake->master_secret, mbedtls_hash_size_for_ciphersuite( suite_info ),
                          MBEDTLS_SSL_TLS1_3_LBL_WITH_LEN( s_ap_traffic ),
-                         padbuf, mbedtls_hash_size_for_ciphersuite( suite_info ), MBEDTLS_SSL_TLS1_3_CONTEXT_HASHED,
+                         ssl->handshake->digest, mbedtls_hash_size_for_ciphersuite( suite_info ), MBEDTLS_SSL_TLS1_3_CONTEXT_HASHED,
                          ssl->handshake->server_traffic_secret, mbedtls_hash_size_for_ciphersuite( suite_info ) );
 
     if( ret != 0 )
@@ -4140,12 +4140,69 @@ static int ssl_finished_in_parse( mbedtls_ssl_context* ssl,
     return( 0 );
 }
 
+
 static int ssl_finished_in_postprocess( mbedtls_ssl_context* ssl )
 {
-    /* Update logic state machine */
+    //int ret; 
+    const mbedtls_ssl_ciphersuite_t *suite_info;
+    const mbedtls_cipher_info_t *cipher_info;
+
+#if defined(MBEDTLS_SHA256_C)
+    mbedtls_sha256_context sha256;
+#endif
+
+#if defined(MBEDTLS_SHA512_C)
+    mbedtls_sha512_context sha512;
+#endif
+
 #if defined(MBEDTLS_SSL_CLI_C)
     if( ssl->conf->endpoint == MBEDTLS_SSL_IS_CLIENT )
     {
+        /* Compute hash over transcript of all messages sent up to the Finish message 
+         * sent by the server and store it in the digest variable of the handshake state. 
+         * This digest will be needed later when computing the application traffic secrets. 
+         */
+        cipher_info = mbedtls_cipher_info_from_type(ssl->transform_negotiate->ciphersuite_info->cipher );
+        if( cipher_info == NULL )
+        {
+            MBEDTLS_SSL_DEBUG_MSG( 1, ( "cipher info for %d not found",
+                                        ssl->transform_negotiate->ciphersuite_info->cipher ) );
+            return( MBEDTLS_ERR_SSL_BAD_INPUT_DATA );
+        }
+
+        suite_info = mbedtls_ssl_ciphersuite_from_id( ssl->session_negotiate->ciphersuite );
+        if( suite_info == NULL )
+        {
+            MBEDTLS_SSL_DEBUG_MSG( 1, ( "mbedtls_ssl_ciphersuite_from_id in mbedtls_ssl_derive_traffic_keys failed" ) );
+            return( MBEDTLS_ERR_SSL_BAD_HS_SERVER_HELLO );
+        }
+
+        if( mbedtls_hash_size_for_ciphersuite( suite_info ) == 32 )
+        {
+    #if defined(MBEDTLS_SHA256_C)
+            mbedtls_sha256_init( &sha256 );
+            mbedtls_sha256_clone( &sha256, &ssl->handshake->fin_sha256 );
+            mbedtls_sha256_finish( &sha256, ssl->handshake->digest );
+            MBEDTLS_SSL_DEBUG_BUF( 3, "Transcript hash (including Server.Finished):", ssl->handshake->digest , 32 );
+    #else
+            MBEDTLS_SSL_DEBUG_MSG( 1, ( "MBEDTLS_SHA256_C not set but ciphersuite with SHA256 negotiated" ) );
+            return( MBEDTLS_ERR_SSL_INTERNAL_ERROR );
+    #endif
+        }
+
+        if( mbedtls_hash_size_for_ciphersuite( suite_info ) == 48 )
+        {
+    #if defined(MBEDTLS_SHA512_C)
+            mbedtls_sha512_init( &sha512 );
+            mbedtls_sha512_starts( &sha512, 1 /* = use SHA384 */ );
+            mbedtls_sha512_clone( &sha512, &ssl->handshake->fin_sha512 );
+            mbedtls_sha512_finish( &sha512, ssl->handshake->digest  );
+            MBEDTLS_SSL_DEBUG_BUF( 3, "Transcript hash (including Server.Finished):", ssl->handshake->digest , 48 );
+    #else
+            MBEDTLS_SSL_DEBUG_MSG( 1, ( "MBEDTLS_SHA512_C not set but ciphersuite with SHA384 negotiated" ) );
+            return( MBEDTLS_ERR_SSL_INTERNAL_ERROR );
+    #endif
+        }
 
     }
 #endif /* MBEDTLS_SSL_CLI_C */
@@ -4158,7 +4215,6 @@ static int ssl_finished_in_postprocess( mbedtls_ssl_context* ssl )
 
     return( 0 );
 }
-
 
 
 #if defined(MBEDTLS_CID)
