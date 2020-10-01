@@ -266,6 +266,10 @@ else()
     set(LIB_INSTALL_DIR lib)
 endif()
 
+find_package(rpclib REQUIRED)
+include_directories(include/ /usr/local/include/)
+link_directories(/usr/local/lib/)
+
 if(ENABLE_ZLIB_SUPPORT)
     find_package(ZLIB)
 
