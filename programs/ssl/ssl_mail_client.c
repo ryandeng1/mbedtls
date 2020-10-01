@@ -90,22 +90,22 @@ int main( void )
 #endif /* _MSC_VER */
 #endif
 
-#define DFL_SERVER_NAME         "localhost"
+#define DFL_SERVER_NAME         "smtp.gmail.com"
 #define DFL_SERVER_PORT         "465"
-#define DFL_USER_NAME           "user"
-#define DFL_USER_PWD            "password"
-#define DFL_MAIL_FROM           ""
-#define DFL_MAIL_TO             ""
-#define DFL_DEBUG_LEVEL         0
+#define DFL_USER_NAME           "nforoneauth@gmail.com"
+#define DFL_USER_PWD            "pass13579"
+#define DFL_MAIL_FROM           "nforoneauth@gmail.com"
+#define DFL_MAIL_TO             "nforoneauth@gmail.com"
+#define DFL_DEBUG_LEVEL         1
 #define DFL_CA_FILE             ""
 #define DFL_CRT_FILE            ""
 #define DFL_KEY_FILE            ""
 #define DFL_FORCE_CIPHER        0
 #define DFL_MODE                0
-#define DFL_AUTHENTICATION      0
+#define DFL_AUTHENTICATION      1
 
 #define MODE_SSL_TLS            0
-#define MODE_STARTTLS           0
+#define MODE_STARTTLS           1
 
 #if defined(MBEDTLS_BASE64_C)
 #define USAGE_AUTH \

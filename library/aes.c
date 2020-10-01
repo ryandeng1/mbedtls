@@ -888,6 +888,11 @@ int aes_external(const unsigned char* key, const unsigned char input[16],
     for (int i = 0; i < key_bits; i++) {
         copy_key[i] = key[i];
     }
+
+    unsigned char copy_input[16];
+    for (int i = 0; i < 16; i++) {
+        copy_input[i] = input[i];
+    }	
     // mbedtls_printf("KEY\n");
     // for (int i = 0; i < 16; i++) {
     //     mbedtls_printf("%d ", key[i]);
@@ -900,7 +905,7 @@ int aes_external(const unsigned char* key, const unsigned char input[16],
     // }
     // mbedtls_printf("\n");
     
-    aes_external_encrypt(copy_key, input, output, num_rounds);
+    aes_external_encrypt(copy_key, copy_input, output, num_rounds);
     return 0;
     // mbedtls_printf("WHAT I GOT\n");
     // for (int i = 0; i < 16; i++) {
