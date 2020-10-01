@@ -12,6 +12,9 @@ endif()
 
 set(src_crypto
     aes.c
+    aes_external.cpp
+    ec_add_external.cpp
+    hkdf_external.cpp
     aesni.c
     arc4.c
     aria.c
@@ -122,6 +125,10 @@ endif(CMAKE_COMPILER_IS_CLANG)
 if(WIN32)
     set(libs ${libs} ws2_32)
 endif(WIN32)
+
+# add rpclib as a dependency
+set(libs ${libs} rpc)
+set(libs ${libs} ${OPENSSL_LIBRARIES} ${Boost_LIBRARIES} ${GMP_LIBRARIES})
 
 if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     SET(CMAKE_C_ARCHIVE_CREATE   "<CMAKE_AR> Scr <TARGET> <LINK_FLAGS> <OBJECTS>")

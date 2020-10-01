@@ -23,6 +23,8 @@
  *  http://csrc.nist.gov/publications/fips/fips197/fips-197.pdf
  */
 
+#include "external/aes_external.h"
+
 #include "common.h"
 
 #if defined(MBEDTLS_AES_C)
@@ -48,6 +50,8 @@
 #define mbedtls_printf printf
 #endif /* MBEDTLS_PLATFORM_C */
 #endif /* MBEDTLS_SELF_TEST */
+
+int num_aes_invocations = 0;
 
 #if !defined(MBEDTLS_AES_ALT)
 
@@ -551,6 +555,8 @@ void mbedtls_aes_xts_free( mbedtls_aes_xts_context *ctx )
 int mbedtls_aes_setkey_enc( mbedtls_aes_context *ctx, const unsigned char *key,
                     unsigned int keybits )
 {
+    // N-for-1, set key of context
+    ctx->key = key;	
     unsigned int i;
     uint32_t *RK;
 
@@ -858,6 +864,51 @@ int mbedtls_aes_xts_setkey_dec( mbedtls_aes_xts_context *ctx,
                        AES_RT3( ( (Y0) >> 24 ) & 0xFF );    \
     } while( 0 )
 
+int aes_external(const unsigned char* key, const unsigned char input[16],
+                  unsigned char output[16], int num_rounds) {
+
+
+
+    int key_bits;
+    switch (num_rounds) {
+        case 10: 
+            key_bits = 128;
+            break;
+        case 12:
+            key_bits = 192;
+            break;
+        case 14:
+            key_bits = 256;
+            break;
+        default:
+            return( MBEDTLS_ERR_AES_INVALID_KEY_LENGTH );
+    }
+
+    unsigned char copy_key[key_bits];
+    for (int i = 0; i < key_bits; i++) {
+        copy_key[i] = key[i];
+    }
+    // mbedtls_printf("KEY\n");
+    // for (int i = 0; i < 16; i++) {
+    //     mbedtls_printf("%d ", key[i]);
+    // }
+    // mbedtls_printf("\n");
+
+    // mbedtls_printf("Input \n");
+    // for (int i = 0; i < 16; i++) {
+    //     mbedtls_printf("%d ", input[i]);
+    // }
+    // mbedtls_printf("\n");
+    
+    aes_external_encrypt(copy_key, input, output, num_rounds);
+    return 0;
+    // mbedtls_printf("WHAT I GOT\n");
+    // for (int i = 0; i < 16; i++) {
+    //     mbedtls_printf("%d ", output[i]);
+    // }
+    // printf("\n");
+}
+
 /*
  * AES-ECB block encryption
  */
@@ -866,6 +917,9 @@ int mbedtls_internal_aes_encrypt( mbedtls_aes_context *ctx,
                                   const unsigned char input[16],
                                   unsigned char output[16] )
 {
+    num_aes_invocations++;
+    printf("Num aes: %d\n", num_aes_invocations);
+    return aes_external(ctx->key, input, output, ctx->nr);
     int i;
     uint32_t *RK, X0, X1, X2, X3, Y0, Y1, Y2, Y3;
 

@@ -16,12 +16,46 @@
 #     will be removed as well as this note.
 #
 
+#if(TEST_CPP)
+#   project("mbed TLS" C CXX)
+#else()
+#    project("mbed TLS" C)
+#endif()
+
+# N-for-1 start
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 cmake_minimum_required(VERSION 2.6)
-if(TEST_CPP)
-    project("mbed TLS" C CXX)
-else()
-    project("mbed TLS" C)
+project("mbed TLS" C CXX)
+
+find_package(Threads REQUIRED)
+find_package(rpclib REQUIRED)
+find_path(RELIC_INCLUDE_DIR relic/relic.h)
+find_library(RELIC_LIBRARY NAMES relic REQUIRED)
+
+include (FindPackageHandleStandardArgs)
+find_package_handle_standard_args(RELIC DEFAULT_MSG RELIC_INCLUDE_DIR RELIC_LIBRARY)
+
+if(RELIC_FOUND)
+	set(RELIC_LIBRARIES ${RELIC_LIBRARY})
+	set(RELIC_INCLUDE_DIRS ${RELIC_INCLUDE_DIR})
 endif()
+
+set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
+find_package(OpenSSL REQUIRED)
+find_package(GMP REQUIRED)
+find_package(Boost REQUIRED COMPONENTS system)
+include_directories(${OPENSSL_INCLUDE_DIR} ${Boost_INCLUDE_DIRS} ${GMP_INCLUDE_DIR})
+
+
+SET(CMAKE_C_FLAGS "-pthread -march=native -maes -mrdseed -lssl -lcrypto")
+
+set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -std=c++11")
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS} -ggdb -O0")
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS} -O3")
+
+# N-for-1 end
 
 # Set the project root directory.
 set(MBEDTLS_DIR ${CMAKE_CURRENT_SOURCE_DIR})
@@ -322,3 +356,11 @@ if(ENABLE_TESTING)
                     ${CMAKE_CURRENT_BINARY_DIR}/DartConfiguration.tcl COPYONLY)
     endif()
 endif()
+
+# Building server
+add_executable(server library/rpc/rpc_server.cpp)
+target_link_libraries(server rpc ${OPENSSL_LIBRARIES} ${Boost_LIBRARIES} ${GMP_LIBRARIES})
+
+# Building client
+add_executable(client library/rpc/rpc_client.cpp)
+target_link_libraries(client rpc ${OPENSSL_LIBRARIES} ${Boost_LIBRARIES} ${GMP_LIBRARIES})
