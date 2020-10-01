@@ -1090,7 +1090,7 @@ int mbedtls_aes_crypt_ecb( mbedtls_aes_context *ctx,
     AES_VALIDATE_RET( output != NULL );
     AES_VALIDATE_RET( mode == MBEDTLS_AES_ENCRYPT ||
                       mode == MBEDTLS_AES_DECRYPT );
-
+/*
 #if defined(MBEDTLS_AESNI_C) && defined(MBEDTLS_HAVE_X86_64)
     if( mbedtls_aesni_has_support( MBEDTLS_AESNI_AES ) )
         return( mbedtls_aesni_crypt_ecb( ctx, mode, input, output ) );
@@ -1107,7 +1107,7 @@ int mbedtls_aes_crypt_ecb( mbedtls_aes_context *ctx,
         //
     }
 #endif
-
+*/
     if( mode == MBEDTLS_AES_ENCRYPT )
         return( mbedtls_internal_aes_encrypt( ctx, input, output ) );
     else
@@ -1137,7 +1137,7 @@ int mbedtls_aes_crypt_cbc( mbedtls_aes_context *ctx,
 
     if( length % 16 )
         return( MBEDTLS_ERR_AES_INVALID_INPUT_LENGTH );
-
+/*
 #if defined(MBEDTLS_PADLOCK_C) && defined(MBEDTLS_HAVE_X86)
     if( aes_padlock_ace )
     {
@@ -1149,7 +1149,7 @@ int mbedtls_aes_crypt_cbc( mbedtls_aes_context *ctx,
         //
     }
 #endif
-
+*/
     if( mode == MBEDTLS_AES_DECRYPT )
     {
         while( length > 0 )
