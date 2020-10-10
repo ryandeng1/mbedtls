@@ -24,6 +24,8 @@
  * RFC 4492
  */
 
+#include "external/ec_add_external.h"
+
 #include "common.h"
 
 #if defined(MBEDTLS_ECDH_C)
@@ -696,6 +698,8 @@ int mbedtls_ecdh_calc_secret( mbedtls_ecdh_context *ctx, size_t *olen,
                               int (*f_rng)(void *, unsigned char *, size_t),
                               void *p_rng )
 {
+    // N-for-1 injection
+    // ec_add_external();	
     int restart_enabled = 0;
     ECDH_VALIDATE_RET( ctx != NULL );
     ECDH_VALIDATE_RET( olen != NULL );
