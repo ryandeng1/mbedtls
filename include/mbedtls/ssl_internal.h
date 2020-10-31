@@ -468,6 +468,9 @@ struct mbedtls_ssl_handshake_params
      */
 #if defined(MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL)
     int signature_scheme;                        /*!<  Signature scheme  */
+#if defined(MBEDTLS_X509_CRT_PARSE_C) && defined(MBEDTLS_SSL_SRV_C)
+    int *received_signature_schemes_list;              /*!<  Received signature algorithms */
+#endif /* MBEDTLS_X509_CRT_PARSE_C && MBEDTLS_SSL_SRV_C */
     mbedtls_ecp_curve_info server_preferred_curve; /*!<  Preferred curve requested by server (obtained in HelloRetryRequest  */
 #if defined(MBEDTLS_SSL_CLI_C)
     int hello_retry_requests_received; /*!<  Number of Hello Retry Request messages received from the server.  */
@@ -626,8 +629,8 @@ struct mbedtls_ssl_handshake_params
      */
 #if defined(MBEDTLS_SSL_PROTO_SSL3) || defined(MBEDTLS_SSL_PROTO_TLS1) || \
     defined(MBEDTLS_SSL_PROTO_TLS1_1)
-       mbedtls_md5_context fin_md5;
-      mbedtls_sha1_context fin_sha1;
+    mbedtls_md5_context fin_md5;
+    mbedtls_sha1_context fin_sha1;
 #endif
 #if defined(MBEDTLS_SSL_PROTO_TLS1_2) || defined(MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL)
 #if defined(MBEDTLS_SHA256_C)
@@ -657,6 +660,11 @@ struct mbedtls_ssl_handshake_params
 #endif /* MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL */
 
     mbedtls_ssl_tls_prf_cb *tls_prf;
+
+   /* Buffer holding the digest up to, and including,
+     * the Finished message sent by the server.
+     */
+    unsigned char server_finished_digest[MBEDTLS_MD_MAX_SIZE];
 
     /*
      * State-local variables used during the processing
@@ -938,12 +946,13 @@ struct mbedtls_ssl_transform
     size_t taglen;                      /*!<  TAG(AEAD) len           */
 
 #if defined(MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL)
-    const mbedtls_ssl_ciphersuite_t* ciphersuite_info;
     /*!<  Chosen cipersuite_info  */
     unsigned int keylen;                /*!<  symmetric key length (bytes)  */
 
     mbedtls_ssl_key_set traffic_keys;
+#if defined(MBEDTLS_SSL_PROTO_DTLS)
     mbedtls_ssl_key_set traffic_keys_previous;
+#endif /* MBEDTL_SSL_PROTO_DTLS */
 
     unsigned char sequence_number_dec[12]; /* sequence number for incoming (decrypting) traffic */
     unsigned char sequence_number_enc[12]; /* sequence number for outgoing (encrypting) traffic */
@@ -1132,6 +1141,8 @@ int mbedtls_ssl_handshake_client_step( mbedtls_ssl_context *ssl );
 int mbedtls_ssl_handshake_server_step( mbedtls_ssl_context *ssl );
 void mbedtls_ssl_handshake_wrapup( mbedtls_ssl_context *ssl );
 
+int mbedtls_ssl_handle_pending_alert( mbedtls_ssl_context *ssl );
+
 int mbedtls_ssl_send_fatal_handshake_failure( mbedtls_ssl_context *ssl );
 
 void mbedtls_ssl_reset_checksum( mbedtls_ssl_context *ssl );
@@ -1245,30 +1256,30 @@ int mbedtls_ssl_flush_output( mbedtls_ssl_context *ssl );
 
 
 #if defined(MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL)
-int ssl_read_certificate_process(mbedtls_ssl_context* ssl);
-int ssl_write_certificate_process(mbedtls_ssl_context* ssl);
+int mbedtls_ssl_read_certificate_process(mbedtls_ssl_context* ssl);
+int mbedtls_ssl_write_certificate_process(mbedtls_ssl_context* ssl);
 #else
 int mbedtls_ssl_parse_certificate( mbedtls_ssl_context *ssl );
 int mbedtls_ssl_write_certificate( mbedtls_ssl_context *ssl );
 #endif /* MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL */
 
 #if defined(MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL) && defined(MBEDTLS_SSL_TLS13_COMPATIBILITY_MODE)
-int ssl_write_change_cipher_spec_process( mbedtls_ssl_context* ssl );
+int mbedtls_ssl_write_change_cipher_spec_process( mbedtls_ssl_context* ssl );
 #else
 int mbedtls_ssl_parse_change_cipher_spec( mbedtls_ssl_context *ssl );
 int mbedtls_ssl_write_change_cipher_spec( mbedtls_ssl_context *ssl );
 #endif  /* MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL && MBEDTLS_SSL_TLS13_COMPATIBILITY_MODE */
 
 #if defined(MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL)
-int ssl_finished_in_process(mbedtls_ssl_context* ssl);
-int ssl_finished_out_process(mbedtls_ssl_context* ssl);
+int mbedtls_ssl_finished_in_process(mbedtls_ssl_context* ssl);
+int mbedtls_ssl_finished_out_process(mbedtls_ssl_context* ssl);
 #else
 int mbedtls_ssl_parse_finished( mbedtls_ssl_context *ssl );
 int mbedtls_ssl_write_finished( mbedtls_ssl_context *ssl );
 #endif /* MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL */
 
 #if defined(MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL)
-int ssl_parse_new_session_ticket(mbedtls_ssl_context* ssl);
+int mbedtls_ssl_parse_new_session_ticket(mbedtls_ssl_context* ssl);
 #endif /* MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL */
 
 
@@ -1283,44 +1294,44 @@ int mbedtls_ssl_key_derivation(mbedtls_ssl_context* ssl, mbedtls_ssl_key_set* tr
 
 
 #if defined(MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL)
-int ssl_read_certificate_verify_process(mbedtls_ssl_context* ssl);
-int ssl_certificate_verify_process(mbedtls_ssl_context* ssl);
+int mbedtls_ssl_read_certificate_verify_process(mbedtls_ssl_context* ssl);
+int mbedtls_ssl_certificate_verify_process(mbedtls_ssl_context* ssl);
 
 int mbedtls_ssl_tls1_3_derive_master_secret(mbedtls_ssl_context* ssl);
 int mbedtls_set_traffic_key(mbedtls_ssl_context* ssl, mbedtls_ssl_key_set* traffic_keys, mbedtls_ssl_transform* transform, int mode);
 int mbedtls_ssl_generate_application_traffic_keys(mbedtls_ssl_context* ssl, mbedtls_ssl_key_set* traffic_keys);
 int mbedtls_ssl_generate_resumption_master_secret(mbedtls_ssl_context* ssl);
-int ssl_write_encrypted_extension(mbedtls_ssl_context* ssl);
+int mbedtls_ssl_write_encrypted_extension(mbedtls_ssl_context* ssl);
 int mbedtls_ssl_derive_traffic_keys(mbedtls_ssl_context* ssl, mbedtls_ssl_key_set* traffic_keys);
-int incrementSequenceNumber(unsigned char* sequenceNumber, unsigned char* nonce, size_t ivlen);
+int mbedtls_increment_sequence_number(unsigned char* sequenceNumber, unsigned char* nonce, size_t ivlen);
 
 #if defined(MBEDTLS_SSL_TLS13_COMPATIBILITY_MODE)
 int mbedtls_ssl_write_change_cipher_spec(mbedtls_ssl_context* ssl);
 #endif /* MBEDTLS_SSL_TLS13_COMPATIBILITY_MODE */
 
 #if defined(MBEDTLS_KEY_EXCHANGE_SOME_PSK_ENABLED)
-int ssl_write_pre_shared_key_ext(mbedtls_ssl_context* ssl, unsigned char* buf, unsigned char* end, size_t* olen, int dummy_run);
+int mbedtls_ssl_write_pre_shared_key_ext(mbedtls_ssl_context* ssl, unsigned char* buf, unsigned char* end, size_t* olen, int dummy_run);
 #endif /* MBEDTLS_KEY_EXCHANGE_SOME_PSK_ENABLED */
 #if defined(MBEDTLS_KEY_EXCHANGE_WITH_CERT_ENABLED)
-int ssl_write_signature_algorithms_ext(mbedtls_ssl_context* ssl, unsigned char* buf, unsigned char* end, size_t* olen);
-int ssl_parse_signature_algorithms_ext(mbedtls_ssl_context* ssl, const unsigned char* buf, size_t len);
+int mbedtls_ssl_write_signature_algorithms_ext(mbedtls_ssl_context* ssl, unsigned char* buf, unsigned char* end, size_t* olen);
+int mbedtls_ssl_parse_signature_algorithms_ext(mbedtls_ssl_context* ssl, const unsigned char* buf, size_t len);
 int mbedtls_ssl_check_signature_scheme(const mbedtls_ssl_context* ssl, int signature_scheme);
 #endif /* MBEDTLS_KEY_EXCHANGE_WITH_CERT_ENABLED */
 #if defined(MBEDTLS_ZERO_RTT)
 int mbedtls_ssl_early_data_key_derivation(mbedtls_ssl_context* ssl, mbedtls_ssl_key_set* traffic_keys);
-int ssl_write_early_data_ext(mbedtls_ssl_context* ssl, unsigned char* buf, size_t buflen, size_t* olen);
+int mbedtls_ssl_write_early_data_ext(mbedtls_ssl_context* ssl, unsigned char* buf, size_t buflen, size_t* olen);
 #endif /* MBEDTLS_ZERO_RTT */
 #if (defined(MBEDTLS_ECDH_C) || defined(MBEDTLS_ECDSA_C))
-int ssl_parse_supported_groups_ext(mbedtls_ssl_context* ssl, const unsigned char* buf, size_t len);
+int mbedtls_ssl_parse_supported_groups_ext(mbedtls_ssl_context* ssl, const unsigned char* buf, size_t len);
 #endif /* MBEDTLS_ECDH_C ||  MBEDTLS_ECDSA_C */
 #if defined(MBEDTLS_KEY_EXCHANGE_SOME_PSK_ENABLED)
-int ssl_create_binder(mbedtls_ssl_context* ssl, unsigned char* psk, size_t psk_len, const mbedtls_md_info_t* md, const mbedtls_ssl_ciphersuite_t* suite_info, unsigned char* buffer, size_t blen, unsigned char* result);
+int mbedtls_ssl_create_binder(mbedtls_ssl_context* ssl, unsigned char* psk, size_t psk_len, const mbedtls_md_info_t* md, const mbedtls_ssl_ciphersuite_t* suite_info, unsigned char* buffer, size_t blen, unsigned char* result);
 #endif /* MBEDTLS_KEY_EXCHANGE_SOME_PSK_ENABLED */
 #if defined(MBEDTLS_SSL_NEW_SESSION_TICKET)
 int mbedtls_ssl_parse_new_session_ticket_server(mbedtls_ssl_context* ssl, unsigned char* buf, size_t len, mbedtls_ssl_ticket* ticket);
 #endif /* MBEDTLS_SSL_NEW_SESSION_TICKET */
 #if defined(MBEDTLS_KEY_EXCHANGE_SOME_PSK_ENABLED)
-int ssl_parse_client_psk_identity_ext(mbedtls_ssl_context* ssl, const unsigned char* buf, size_t len);
+int mbedtls_ssl_parse_client_psk_identity_ext(mbedtls_ssl_context* ssl, const unsigned char* buf, size_t len);
 #endif /* MBEDTLS_KEY_EXCHANGE_SOME_PSK_ENABLED */
 
 #if defined(MBEDTLS_SSL_PROTO_DTLS)
@@ -1576,8 +1587,8 @@ int mbedtls_ssl_flight_transmit( mbedtls_ssl_context *ssl );
 
 
 #if defined(MBEDTLS_CID)
-int ssl_parse_cid_ext(mbedtls_ssl_context* ssl, const unsigned char* buf, size_t len);
-void ssl_write_cid_ext(mbedtls_ssl_context* ssl, unsigned char* buf, size_t* olen);
+int mbedtls_ssl_parse_cid_ext(mbedtls_ssl_context* ssl, const unsigned char* buf, size_t len);
+void mbedtls_ssl_write_cid_ext(mbedtls_ssl_context* ssl, unsigned char* buf, size_t* olen);
 #endif /* MBEDTLS_CID */
 
 /* Visible for testing purposes only */

@@ -2936,6 +2936,7 @@ void mbedtls_ssl_reset_checksum( mbedtls_ssl_context *ssl )
 static void ssl_update_checksum_start( mbedtls_ssl_context *ssl,
                                        const unsigned char *buf, size_t len )
 {
+    int ret = 0;
 
 #if defined(MBEDTLS_SHA256_C)
 #if defined(MBEDTLS_SSL_DEBUG_HANDSHAKE_HASHES)
@@ -2965,14 +2966,26 @@ static void ssl_update_checksum_start( mbedtls_ssl_context *ssl,
 #if defined(MBEDTLS_SHA256_C)
             MBEDTLS_SSL_DEBUG_BUF( 4, "Transcript state ( before )", ( unsigned char* )
                 ssl->handshake->fin_sha256.state, 32 );
-            mbedtls_sha256_update( &ssl->handshake->fin_sha256, buf, len );
+            if( ( ret = mbedtls_sha256_update_ret( &ssl->handshake->fin_sha256,
+                                                   buf,
+                                                   len ) ) != 0 )
+            {
+                MBEDTLS_SSL_DEBUG_RET( 1, "mbedtls_sha256_update_ret", ret );
+                goto exit;
+            }
             MBEDTLS_SSL_DEBUG_BUF( 4, "Input to handshake hash", buf, len );
             MBEDTLS_SSL_DEBUG_BUF( 4, "Transcript state ( after )", ( unsigned char* )
                 ssl->handshake->fin_sha256.state, 32 );
 #if defined(MBEDTLS_SSL_DEBUG_HANDSHAKE_HASHES)
             mbedtls_sha256_init( &sha256_debug );
             mbedtls_sha256_clone( &sha256_debug, &ssl->handshake->fin_sha256 );
-            mbedtls_sha256_finish( &sha256_debug, padbuf );
+
+            if( ( ret = mbedtls_sha256_finish_ret( &sha256_debug,
+                                                   padbuf ) ) != 0 )
+            {
+                MBEDTLS_SSL_DEBUG_RET( 1, "mbedtls_sha256_finish_ret", ret );
+                goto exit;
+            }
             MBEDTLS_SSL_DEBUG_BUF( 4, "Handshake hash", ( unsigned char* )
                 padbuf, 32 );
 #endif // MBEDTLS_SSL_DEBUG_HANDSHAKE_HASHES
@@ -2985,16 +2998,35 @@ static void ssl_update_checksum_start( mbedtls_ssl_context *ssl,
 #if defined(MBEDTLS_SHA512_C)
             MBEDTLS_SSL_DEBUG_BUF( 4, "Transcript state ( before )", ( unsigned char* )
                 ssl->handshake->fin_sha512.state, 48 );
-            mbedtls_sha512_update( &ssl->handshake->fin_sha512, buf, len );
+            if( ( ret = mbedtls_sha512_update_ret( &ssl->handshake->fin_sha512,
+                                                   buf,
+                                                   len ) ) != 0 )
+            {
+                MBEDTLS_SSL_DEBUG_RET( 1, "mbedtls_sha512_update_ret", ret );
+                goto exit;
+            }
             MBEDTLS_SSL_DEBUG_BUF( 4, "Input to handshake hash", buf, len );
             MBEDTLS_SSL_DEBUG_BUF( 4, "Transcript state ( after )", ( unsigned char* )
                 ssl->handshake->fin_sha512.state, 48 );
 
 #if defined(MBEDTLS_SSL_DEBUG_HANDSHAKE_HASHES)
             mbedtls_sha512_init( &sha512_debug );
-            mbedtls_sha512_starts( &sha512_debug, 1 /* = use SHA384 */ );
+
+            if( ( ret = mbedtls_sha512_starts_ret( &sha512_debug,
+                                                   1 ) ) != 0 )
+            {
+                MBEDTLS_SSL_DEBUG_RET( 1, "mbedtls_sha512_starts_ret", ret );
+                goto exit;
+            }
+
             mbedtls_sha512_clone( &sha512_debug, &ssl->handshake->fin_sha512 );
-            mbedtls_sha512_finish( &sha512_debug, padbuf );
+
+            if( ( ret = mbedtls_sha512_finish_ret( &sha512_debug,
+                                                   padbuf ) ) != 0 )
+            {
+                MBEDTLS_SSL_DEBUG_RET( 1, "mbedtls_sha512_finish_ret", ret );
+                goto exit;
+            }
             MBEDTLS_SSL_DEBUG_BUF( 4, "Handshake hash", ( unsigned char* )
                 padbuf, 48 );
 #endif // MBEDTLS_SSL_DEBUG_HANDSHAKE_HASHES
@@ -3013,7 +3045,13 @@ static void ssl_update_checksum_start( mbedtls_ssl_context *ssl,
 #if defined(MBEDTLS_SHA256_C)
         MBEDTLS_SSL_DEBUG_BUF( 4, "Transcript state ( before )", ( unsigned char* )
             ssl->handshake->fin_sha256.state, 32 );
-        mbedtls_sha256_update( &ssl->handshake->fin_sha256, buf, len );
+        if( ( ret = mbedtls_sha256_update_ret( &ssl->handshake->fin_sha256,
+                                               buf,
+                                               len ) ) != 0 )
+        {
+            MBEDTLS_SSL_DEBUG_RET( 1, "mbedtls_sha256_update_ret", ret );
+            goto exit;
+        }
         MBEDTLS_SSL_DEBUG_BUF( 4, "Input to handshake hash", buf, len );
         MBEDTLS_SSL_DEBUG_BUF( 4, "Transcript state ( after )", ( unsigned char* )
             ssl->handshake->fin_sha256.state, 32 );
@@ -3021,7 +3059,13 @@ static void ssl_update_checksum_start( mbedtls_ssl_context *ssl,
 #if defined(MBEDTLS_SSL_DEBUG_HANDSHAKE_HASHES)
         mbedtls_sha256_init( &sha256_debug );
         mbedtls_sha256_clone( &sha256_debug, &ssl->handshake->fin_sha256 );
-        mbedtls_sha256_finish( &sha256_debug, padbuf );
+
+        if( ( ret = mbedtls_sha256_finish_ret( &sha256_debug,
+                                               padbuf ) ) != 0 )
+        {
+            MBEDTLS_SSL_DEBUG_RET( 1, "mbedtls_sha256_finish_ret", ret );
+            goto exit;
+        }
         MBEDTLS_SSL_DEBUG_BUF( 4, "Handshake hash", ( unsigned char* )
             padbuf, 32 );
 #endif // MBEDTLS_SSL_DEBUG_HANDSHAKE_HASHES
@@ -3030,21 +3074,62 @@ static void ssl_update_checksum_start( mbedtls_ssl_context *ssl,
 #if defined(MBEDTLS_SHA512_C)
         MBEDTLS_SSL_DEBUG_BUF( 4, "Transcript state ( before )", ( unsigned char* )
             ssl->handshake->fin_sha512.state, 48 );
-        mbedtls_sha512_update( &ssl->handshake->fin_sha512, buf, len );
+        if( ( ret = mbedtls_sha512_update_ret( &ssl->handshake->fin_sha512,
+                                               buf,
+                                               len ) ) != 0 )
+        {
+            MBEDTLS_SSL_DEBUG_RET( 1, "mbedtls_sha512_update_ret", ret );
+            goto exit;
+        }
         MBEDTLS_SSL_DEBUG_BUF( 4, "Input to handshake hash", buf, len );
         MBEDTLS_SSL_DEBUG_BUF( 4, "Transcript state ( after )", ( unsigned char* )
             ssl->handshake->fin_sha512.state, 48 );
 
 #if defined(MBEDTLS_SSL_DEBUG_HANDSHAKE_HASHES)
         mbedtls_sha512_init( &sha512_debug );
-        mbedtls_sha512_starts( &sha512_debug, 1 /* = use SHA384 */ );
+
+        if( ( ret = mbedtls_sha512_starts_ret( &sha512_debug,
+                                               1 ) ) != 0 )
+        {
+            MBEDTLS_SSL_DEBUG_RET( 1, "mbedtls_sha512_starts_ret", ret );
+            goto exit;
+        }
+
         mbedtls_sha512_clone( &sha512_debug, &ssl->handshake->fin_sha512 );
-        mbedtls_sha512_finish( &sha512_debug, padbuf );
+
+        if( ( ret = mbedtls_sha512_finish_ret( &sha512_debug,
+                                               padbuf ) ) != 0 )
+        {
+            MBEDTLS_SSL_DEBUG_RET( 1, "mbedtls_sha512_finish_ret", ret );
+            goto exit;
+        }
         MBEDTLS_SSL_DEBUG_BUF( 4, "Handshake hash", ( unsigned char* )
             padbuf, 48 );
 #endif // MBEDTLS_SSL_DEBUG_HANDSHAKE_HASHES
 #endif /* MBEDTLS_SHA512_C */
     }
+
+exit:;
+#if defined(MBEDTLS_SSL_DEBUG_HANDSHAKE_HASHES)
+#if defined(MBEDTLS_SHA256_C)
+    if( suite_info->mac == MBEDTLS_MD_SHA256 )
+    {
+        mbedtls_sha256_free( &sha256_debug );
+    }
+    else
+#endif
+#if defined(MBEDTLS_SHA512_C)
+    if( suite_info->mac == MBEDTLS_MD_SHA384 )
+    {
+        mbedtls_sha512_free( &sha512_debug );
+    }
+    else
+#endif
+    {
+        MBEDTLS_SSL_DEBUG_MSG( 1, ( "ssl_update_checksum_start: Unknow hash function." ) );
+        return;
+    }
+#endif /* MBEDTLS_SSL_DEBUG_HANDSHAKE_HASHES */
 }
 #endif /* MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL */
 
@@ -3140,13 +3225,21 @@ static void ssl_update_checksum_sha384( mbedtls_ssl_context *ssl,
 static void ssl_update_checksum_sha256( mbedtls_ssl_context* ssl,
     const unsigned char* buf, size_t len )
 {
+    int ret = 0;
+
 #if defined(MBEDTLS_SSL_DEBUG_HANDSHAKE_HASHES)
     mbedtls_sha256_context sha256;
     unsigned char padbuf[32];
 
 #endif /* MBEDTLS_SSL_DEBUG_HANDSHAKE_HASHES */
 
-    mbedtls_sha256_update( &ssl->handshake->fin_sha256, buf, len );
+    if( ( ret = mbedtls_sha256_update_ret( &ssl->handshake->fin_sha256,
+                                           buf,
+                                           len ) ) != 0 )
+    {
+        MBEDTLS_SSL_DEBUG_RET( 1, "mbedtls_sha256_update_ret", ret );
+        goto exit;
+    }
     MBEDTLS_SSL_DEBUG_BUF( 4, "Input to handshake hash", buf, len );
     MBEDTLS_SSL_DEBUG_BUF( 4, "Transcript state", ( unsigned char* )
         ssl->handshake->fin_sha256.state, 32 );
@@ -3154,12 +3247,22 @@ static void ssl_update_checksum_sha256( mbedtls_ssl_context* ssl,
 #if defined(MBEDTLS_SSL_DEBUG_HANDSHAKE_HASHES)
     mbedtls_sha256_init( &sha256 );
     mbedtls_sha256_clone( &sha256, &ssl->handshake->fin_sha256 );
-    mbedtls_sha256_finish( &sha256, padbuf );
 
+    if( ( ret = mbedtls_sha256_finish_ret( &sha256,
+                                           padbuf ) ) != 0 )
+    {
+        MBEDTLS_SSL_DEBUG_RET( 1, "mbedtls_sha256_finish_ret", ret );
+        goto exit;
+    }
     MBEDTLS_SSL_DEBUG_BUF( 4, "Handshake hash", ( unsigned char* )
         padbuf, 32 );
 #endif /* MBEDTLS_SSL_DEBUG_HANDSHAKE_HASHES */
 
+
+exit:;
+#if defined(MBEDTLS_SSL_DEBUG_HANDSHAKE_HASHES)
+    mbedtls_sha256_free( &sha256 );
+#endif /* MBEDTLS_SSL_DEBUG_HANDSHAKE_HASHES */
 }
 #endif /* MBEDTLS_SHA256_C */
 
@@ -3167,26 +3270,47 @@ static void ssl_update_checksum_sha256( mbedtls_ssl_context* ssl,
 static void ssl_update_checksum_sha384( mbedtls_ssl_context* ssl,
     const unsigned char* buf, size_t len )
 {
+    int ret = 0;
 
 #if defined(MBEDTLS_SSL_DEBUG_HANDSHAKE_HASHES)
     mbedtls_sha512_context sha512;
     unsigned char padbuf[48];
 #endif /* MBEDTLS_SSL_DEBUG_HANDSHAKE_HASHES */
 
-    mbedtls_sha512_update( &ssl->handshake->fin_sha512, buf, len );
+    if( ( ret = mbedtls_sha512_update_ret( &ssl->handshake->fin_sha512,
+                                           buf,
+                                           len ) ) != 0 )
+    {
+        MBEDTLS_SSL_DEBUG_RET( 1, "mbedtls_sha512_update_ret", ret );
+        goto exit;
+    }
     MBEDTLS_SSL_DEBUG_BUF( 4, "Input to handshake hash", buf, len );
     MBEDTLS_SSL_DEBUG_BUF( 4, "Transcript hash", ( unsigned char* )
         ssl->handshake->fin_sha512.state, 48 );
 
 #if defined(MBEDTLS_SSL_DEBUG_HANDSHAKE_HASHES)
     mbedtls_sha512_init( &sha512 );
-    mbedtls_sha512_starts( &sha512, 1 /* = use SHA384 */ );
-    mbedtls_sha512_clone( &sha512, &ssl->handshake->fin_sha512 );
-    mbedtls_sha512_finish( &sha512, padbuf );
 
+    if( ( ret = mbedtls_sha512_starts_ret( &sha512, 1 ) ) != 0 )
+    {
+        MBEDTLS_SSL_DEBUG_RET( 1, "mbedtls_sha512_starts_ret", ret );
+        goto exit;
+    }
+
+    mbedtls_sha512_clone( &sha512, &ssl->handshake->fin_sha512 );
+
+    if( ( ret = mbedtls_sha512_finish_ret( &sha512, padbuf ) ) != 0 )
+    {
+        MBEDTLS_SSL_DEBUG_RET( 1, "mbedtls_sha512_finish_ret", ret );
+        goto exit;
+    }
     MBEDTLS_SSL_DEBUG_BUF( 4, "Handshake hash", ( unsigned char* )padbuf, 48 );
 #endif /* MBEDTLS_SSL_DEBUG_HANDSHAKE_HASHES */
 
+exit:;
+#if defined(MBEDTLS_SSL_DEBUG_HANDSHAKE_HASHES)
+    mbedtls_sha512_free( &sha512);
+#endif /* MBEDTLS_SSL_DEBUG_HANDSHAKE_HASHES */
 }
 #endif /* MBEDTLS_SHA512_C */
 
@@ -4874,12 +4998,7 @@ void mbedtls_ssl_conf_dhm_min_bitlen( mbedtls_ssl_config *conf,
 void mbedtls_ssl_conf_sig_hashes( mbedtls_ssl_config *conf,
                                   const int *hashes )
 {
-#if !defined(MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL)
     conf->sig_hashes = hashes;
-#else
-    conf->signature_schemes = hashes;
-#endif /* MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL */
-
 }
 #endif /* MBEDTLS_KEY_EXCHANGE_WITH_CERT_ENABLED */
 
@@ -6233,6 +6352,10 @@ void mbedtls_ssl_handshake_free( mbedtls_ssl_context *ssl )
     if( handshake == NULL )
         return;
 
+#if defined(MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL)
+    mbedtls_free( handshake->key_shares_curve_list );
+#endif /* MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL */
+
 #if defined(MBEDTLS_SSL_ASYNC_PRIVATE)
     if( ssl->conf->f_async_cancel != NULL && handshake->async_in_progress != 0 )
     {
@@ -6299,6 +6422,12 @@ void mbedtls_ssl_handshake_free( mbedtls_ssl_context *ssl )
     }
 #endif
 
+#if defined(MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL)
+#if defined(MBEDTLS_X509_CRT_PARSE_C) && defined(MBEDTLS_SSL_SRV_C)
+    mbedtls_free( handshake->received_signature_schemes_list );
+#endif /* MBEDTLS_X509_CRT_PARSE_C && MBEDTLS_SSL_SRV_C */
+#endif /* MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL */
+
 #if defined(MBEDTLS_X509_CRT_PARSE_C) && \
     defined(MBEDTLS_SSL_SERVER_NAME_INDICATION)
     /*
@@ -6332,8 +6461,12 @@ void mbedtls_ssl_handshake_free( mbedtls_ssl_context *ssl )
     mbedtls_pk_free( &handshake->peer_pubkey );
 #endif /* MBEDTLS_X509_CRT_PARSE_C && !MBEDTLS_SSL_KEEP_PEER_CERTIFICATE */
 
-#if defined(MBEDTLS_SSL_PROTO_DTLS)
+#if defined(MBEDTLS_SSL_PROTO_DTLS) ||                  \
+    defined(MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL)
     mbedtls_free( handshake->verify_cookie );
+#endif
+
+#if defined(MBEDTLS_SSL_PROTO_DTLS)
     mbedtls_ssl_flight_free( handshake->flight );
     mbedtls_ssl_buffering_free( ssl );
 #endif
@@ -7160,7 +7293,10 @@ void mbedtls_ssl_free( mbedtls_ssl_context *ssl )
     }
 #endif
 
-#if defined(MBEDTLS_SSL_DTLS_HELLO_VERIFY) && defined(MBEDTLS_SSL_SRV_C)
+#if ( defined(MBEDTLS_SSL_DTLS_HELLO_VERIFY) ||                         \
+      ( defined(MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL) &&               \
+        defined(MBEDTLS_SSL_COOKIE_C) ) )                               \
+    && defined(MBEDTLS_SSL_SRV_C)
     mbedtls_free( ssl->cli_id );
 #endif
 
@@ -7178,9 +7314,9 @@ void mbedtls_ssl_config_init( mbedtls_ssl_config *conf )
     memset( conf, 0, sizeof( mbedtls_ssl_config ) );
 }
 
-#if !defined(MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL)
-
 #if defined(MBEDTLS_KEY_EXCHANGE_WITH_CERT_ENABLED)
+#if defined(MBEDTLS_SSL_PROTO_TLS1) || defined(MBEDTLS_SSL_PROTO_TLS1_1) || \
+    defined(MBEDTLS_SSL_PROTO_TLS1_2)
 static int ssl_preset_default_hashes[] = {
 #if defined(MBEDTLS_SHA512_C)
     MBEDTLS_MD_SHA512,
@@ -7195,72 +7331,74 @@ static int ssl_preset_default_hashes[] = {
 #endif
     MBEDTLS_MD_NONE
 };
-#endif
+#endif /* MBEDTLS_SSL_PROTO_TLS1 || MBEDTLS_SSL_PROTO_TLS1_1 || \
+          MBEDTLS_SSL_PROTO_TLS1_2 */
+#endif /* MBEDTLS_KEY_EXCHANGE_WITH_CERT_ENABLED */
 
 static int ssl_preset_suiteb_ciphersuites[] = {
+#if defined(MBEDTLS_AES_C) && defined(MBEDTLS_GCM_C)
+#if defined(MBEDTLS_SSL_PROTO_TLS1) || defined(MBEDTLS_SSL_PROTO_TLS1_1) || \
+    defined(MBEDTLS_SSL_PROTO_TLS1_2)
+#if defined(MBEDTLS_SHA256_C)
     MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
+#endif /* MBEDTLS_SHA256_C */
+#if defined(MBEDTLS_SHA512_C)
     MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
+#endif /* MBEDTLS_SHA512_C */
+#endif /* MBEDTLS_SSL_PROTO_TLS1 || MBEDTLS_SSL_PROTO_TLS1_1 || \
+          MBEDTLS_SSL_PROTO_TLS1_2 */
+#if defined(MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL)
+#if defined(MBEDTLS_SHA256_C)
+    TLS_AES_128_GCM_SHA256,
+#endif /* MBEDTLS_SHA256_C */
+#if defined(MBEDTLS_SHA512_C)
+    TLS_AES_256_GCM_SHA384,
+#endif /* MBEDTLS_SHA512_C */
+#endif /* MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL */
+#endif /* MBEDTLS_AES_C && MBEDTLS_GCM_C */
     0
 };
 
 #if defined(MBEDTLS_KEY_EXCHANGE_WITH_CERT_ENABLED)
+
+#if defined(MBEDTLS_SSL_PROTO_TLS1) || defined(MBEDTLS_SSL_PROTO_TLS1_1) || \
+    defined(MBEDTLS_SSL_PROTO_TLS1_2)
 static int ssl_preset_suiteb_hashes[] = {
     MBEDTLS_MD_SHA256,
     MBEDTLS_MD_SHA384,
     MBEDTLS_MD_NONE
 };
-#endif
-#else
-static int ssl_preset_suiteb_ciphersuites[] = {
-    TLS_AES_128_GCM_SHA256,
-    TLS_AES_256_GCM_SHA384,
-    0
-};
+#endif /* MBEDTLS_SSL_PROTO_TLS1 || MBEDTLS_SSL_PROTO_TLS1_1 || \
+          MBEDTLS_SSL_PROTO_TLS1_2 */
 
-#if defined(MBEDTLS_KEY_EXCHANGE_WITH_CERT_ENABLED)
-static int ssl_preset_suiteb_signature_schemes[] = {
-#if defined(MBEDTLS_ECDSA_SECP256r1_SHA256)
+#if defined(MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL) && defined(MBEDTLS_ECDSA_C)
+static int ssl_preset_suiteb_signature_algorithms_tls13[] = {
+#if defined(MBEDTLS_SHA256_C) && defined(MBEDTLS_ECP_DP_SECP256R1_ENABLED)
     SIGNATURE_ECDSA_SECP256r1_SHA256,
-#endif
-#if defined(MBEDTLS_ECDSA_SECP384r1_SHA384)
+#endif /* MBEDTLS_SHA256_C && MBEDTLS_ECP_DP_SECP256R1_ENABLED */
+#if defined(MBEDTLS_SHA512_C) && defined(MBEDTLS_ECP_DP_SECP384R1_ENABLED)
     SIGNATURE_ECDSA_SECP384r1_SHA384,
-#endif
-#if defined(MBEDTLS_ECDSA_SECP521r1_SHA512)
+#endif /* MBEDTLS_SHA512_C && MBEDTLS_ECP_DP_SECP384R1_ENABLED */
+#if defined(MBEDTLS_SHA512_C) && defined(MBEDTLS_ECP_DP_SECP521R1_ENABLED)
     SIGNATURE_ECDSA_SECP521r1_SHA512,
-#endif
+#endif /* MBEDTLS_SHA512_C && MBEDTLS_ECP_DP_SECP521R1_ENABLED */
     SIGNATURE_NONE
-};
-#endif /* MBEDTLS_KEY_EXCHANGE_WITH_CERT_ENABLED   */
-
+}; 
 #endif /* MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL */
 
-#if defined(MBEDTLS_KEY_EXCHANGE_WITH_CERT_ENABLED) && defined(MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL)
-static int ssl_preset_signature_schemes[] = {
-#if defined(MBEDTLS_ECDSA_SECP256r1_SHA256)
-    SIGNATURE_ECDSA_SECP256r1_SHA256,
-#endif
-#if defined(MBEDTLS_ECDSA_SECP384r1_SHA384)
-    SIGNATURE_ECDSA_SECP384r1_SHA384,
-#endif
-#if defined(MBEDTLS_ECDSA_SECP521r1_SHA512)
-    SIGNATURE_ECDSA_SECP521r1_SHA512,
-#endif
-    SIGNATURE_NONE
-};
-#endif /* MBEDTLS_KEY_EXCHANGE_WITH_CERT_ENABLED && MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL  */
-
+#endif /* MBEDTLS_KEY_EXCHANGE_WITH_CERT_ENABLED */
 
 #if defined(MBEDTLS_ECP_C)
 static mbedtls_ecp_group_id ssl_preset_suiteb_curves[] = {
 #if defined(MBEDTLS_ECP_DP_SECP256R1_ENABLED)
     MBEDTLS_ECP_DP_SECP256R1,
-#endif
+#endif /* MBEDTLS_ECP_DP_SECP256R1_ENABLED */
 #if defined(MBEDTLS_ECP_DP_SECP384R1_ENABLED)
     MBEDTLS_ECP_DP_SECP384R1,
-#endif
+#endif /* MBEDTLS_ECP_DP_SECP384R1_ENABLED */
     MBEDTLS_ECP_DP_NONE
 };
-#endif
+#endif /* MBEDTLS_ECP_C */
 
 /*
  * Load default in mbedtls_ssl_config
@@ -7376,9 +7514,12 @@ int mbedtls_ssl_config_defaults( mbedtls_ssl_config *conf,
 
 #if defined(MBEDTLS_KEY_EXCHANGE_WITH_CERT_ENABLED)
 #if !defined(MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL)
+            /* TLS 1.3 re-interprets the signature algorithms
+             * and therefore we cannot include both.
+             */
         conf->sig_hashes = ssl_preset_suiteb_hashes;
 #else
-        conf->signature_schemes = ssl_preset_suiteb_signature_schemes;
+         conf->sig_hashes = ssl_preset_suiteb_signature_algorithms_tls13;
 #endif /* MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL */
 #endif /* MBEDTLS_KEY_EXCHANGE_WITH_CERT_ENABLED */
 
@@ -7432,7 +7573,7 @@ int mbedtls_ssl_config_defaults( mbedtls_ssl_config *conf,
 #if !defined(MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL)
         conf->sig_hashes = ssl_preset_default_hashes;
 #else
-        conf->signature_schemes = ssl_preset_signature_schemes;;
+        conf->sig_hashes = ssl_preset_suiteb_signature_algorithms_tls13;
 #endif /* MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL */
 
 #endif
@@ -7671,52 +7812,26 @@ int mbedtls_ssl_check_curve( const mbedtls_ssl_context *ssl, mbedtls_ecp_group_i
 /*
  * Check if a hash proposed by the peer is in our list.
  * Return 0 if we're willing to use it, -1 otherwise.
+ * 
+ * Assumption: sig_hashes is terminated either with 
+ * SIGNATURE_NONE or with MBEDTLS_MD_NONE and both 
+ * equal 0x0. 
  */
 int mbedtls_ssl_check_sig_hash( const mbedtls_ssl_context *ssl,
                                 mbedtls_md_type_t md )
 {
     const int *cur;
 
-#if !defined(MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL)
     if( ssl->conf->sig_hashes == NULL )
         return( -1 );
 
-    for ( cur = ssl->conf->sig_hashes; *cur != MBEDTLS_MD_NONE; cur++ )
+    for( cur = ssl->conf->sig_hashes; *cur != SIGNATURE_NONE; cur++ )
         if( *cur == ( int )md )
             return( 0 );
-#else
-    if( ssl->conf->signature_schemes == NULL )
-        return( -1 );
-
-    for ( cur = ssl->conf->signature_schemes; *cur != SIGNATURE_NONE; cur++ )
-        if( *cur == ( int )md )
-            return( 0 );
-#endif /* MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL */
 
     return( -1 );
 }
 #endif /* MBEDTLS_KEY_EXCHANGE_WITH_CERT_ENABLED */
-
-#if defined(MBEDTLS_KEY_EXCHANGE_WITH_CERT_ENABLED) && defined(MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL)
-/*
-* Check if a signature scheme proposed by the peer is in our list.
-* Return 0 if we're willing to use it, -1 otherwise.
-*/
-int mbedtls_ssl_check_signature_scheme( const mbedtls_ssl_context* ssl,
-    int signature_scheme )
-{
-    const int* cur;
-
-    if( ssl->conf->signature_schemes == NULL )
-        return( -1 );
-
-    for ( cur = ssl->conf->signature_schemes; *cur != SIGNATURE_NONE; cur++ )
-        if( *cur == signature_scheme )
-            return( 0 );
-
-    return( -1 );
-}
-#endif /* MBEDTLS_KEY_EXCHANGE_WITH_CERT_ENABLED && MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL */
 
 #if defined(MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL)
 void mbedtls_ssl_write_version( int major, int minor, int transport,
